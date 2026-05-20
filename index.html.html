@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Umuzi Photo Club · Business Forecast</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; font-size: 14px; }
+
+.header { background: #1e293b; color: white; padding: 16px 24px; }
+.header h1 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+.summary-cards { display: flex; gap: 12px; flex-wrap: wrap; }
+.summary-card { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 16px; min-width: 150px; }
+.summary-card .label { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
+.summary-card .value { font-size: 18px; font-weight: 700; margin-top: 2px; }
+.summary-card .detail { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+.summary-card.secured .value { color: #34d399; }
+.summary-card.forecasted .value { color: #93c5fd; }
+.summary-card.expenses .value { color: #fca5a5; }
+.summary-card.runway .value { color: #fcd34d; }
+
+/* Scenario toggle in header */
+.scenario-toggle { display: inline-flex; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 3px; margin-top: 10px; }
+.scenario-btn { padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; background: transparent; color: rgba(255,255,255,0.7); transition: all 0.15s; }
+.scenario-btn.active { background: white; color: #1e293b; }
+.scenario-label { font-size: 12px; color: rgba(255,255,255,0.6); margin-right: 8px; align-self: center; }
+
+.tabs { background: white; border-bottom: 1px solid #e2e8f0; display: flex; padding: 0 24px; }
+.tab-btn { padding: 12px 20px; border: none; background: none; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+.tab-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+.tab-btn:hover:not(.active) { color: #1e293b; }
+
+.tab-panel { display: none; padding: 24px; }
+.tab-panel.active { display: block; }
+
+.card { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 20px; }
+.card-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+.badge-secured { background: #dcfce7; color: #166534; }
+.badge-forecasted { background: #dbeafe; color: #1e40af; }
+
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.form-group label { display: block; font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 4px; }
+.form-group input { width: 100%; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; color: #1e293b; background: white; }
+.form-group input:focus { outline: 2px solid #3b82f6; border-color: transparent; }
+.btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+.btn-primary { background: #3b82f6; color: white; }
+.btn-primary:hover { background: #2563eb; }
+.btn-secured { background: #10b981; color: white; }
+.btn-secured:hover { background: #059669; }
+.btn-danger { background: #fee2e2; color: #b91c1c; border: none; }
+.btn-danger:hover { background: #fecaca; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+.data-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+.data-table th { background: #f8fafc; padding: 8px 12px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+.data-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: #f8fafc; }
+.empty-state { text-align: center; padding: 24px; color: #94a3b8; font-size: 13px; }
+
+/* Expense inputs */
+.exp-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.exp-input-field { }
+.exp-input-field label { display: block; font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 4px; }
+.exp-input-field input { width: 100%; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; color: #1e293b; }
+.exp-input-field input:focus { outline: 2px solid #3b82f6; border-color: transparent; }
+
+/* Year escalation preview table */
+.escalation-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+.escalation-table th { background: #1e293b; color: white; padding: 8px 12px; text-align: right; font-weight: 600; font-size: 12px; }
+.escalation-table th:first-child { text-align: left; }
+.escalation-table td { padding: 8px 12px; text-align: right; border-bottom: 1px solid #f1f5f9; }
+.escalation-table td:first-child { text-align: left; font-weight: 600; }
+.escalation-table tr:nth-child(even) td { background: #f8fafc; }
+.escalation-table .total-row td { font-weight: 700; background: #fff1f2; color: #b91c1c; border-top: 2px solid #fca5a5; }
+.escalation-table .total-row td:first-child { color: #b91c1c; }
+.year-badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+
+/* Salary scenario card */
+.scenario-card-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.scenario-col { }
+.scenario-col-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+.col-current { background: #f0fdf4; color: #166534; }
+.col-new { background: #eff6ff; color: #1e40af; }
+
+.add-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.monthly-preview { font-size: 12px; font-weight: 600; min-width: 120px; }
+
+/* Forecast grid */
+.grid-wrapper { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
+.forecast-table { border-collapse: collapse; font-size: 12px; }
+.forecast-table th { background: #1e293b; color: white; padding: 6px 10px; white-space: nowrap; text-align: right; font-weight: 500; }
+.forecast-table th.row-header { text-align: left; min-width: 200px; background: #0f172a; position: sticky; left: 0; z-index: 20; }
+.forecast-table th.year-header { background: #0f172a; text-align: center; font-size: 13px; font-weight: 700; border-left: 3px solid #475569; }
+.forecast-table th.month-cell { background: #334155; font-size: 11px; }
+.forecast-table th.cur-month-header { background: #b45309; }
+.forecast-table td { padding: 5px 10px; text-align: right; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+.forecast-table td.row-label { text-align: left; background: white; position: sticky; left: 0; border-right: 2px solid #e2e8f0; z-index: 5; min-width: 200px; padding-left: 12px; }
+.forecast-table td.row-label.indent { padding-left: 24px; font-weight: 400; color: #64748b; font-size: 12px; }
+.forecast-table tr.subtotal-row td { font-weight: 700; }
+.forecast-table tr.grand-total-row td { font-weight: 700; font-size: 13px; border-top: 3px solid #1e293b; border-bottom: 3px solid #1e293b; }
+.forecast-table tr.cumulative-row td { font-weight: 700; font-size: 13px; }
+
+.positive { color: #15803d; }
+.negative { color: #b91c1c !important; background: #fee2e2 !important; }
+.zero-val { color: #94a3b8; }
+.cur-month-cell { background: #fef9c3 !important; font-weight: 700 !important; }
+.past-col { opacity: 0.55; }
+.year-boundary { border-left: 3px solid; }
+
+.scroll-hint { font-size: 11px; color: #94a3b8; text-align: right; margin-bottom: 6px; }
+.grid-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; margin-bottom: 12px; padding: 10px 14px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; align-items: center; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.scenario-indicator { margin-left: auto; font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 6px; }
+.si-current { background: #dcfce7; color: #166534; }
+.si-newroles { background: #dbeafe; color: #1e40af; }
+
+/* ── Annual View ── */
+.annual-section { background: white; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 14px; overflow: hidden; }
+.annual-section-header { padding: 16px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background 0.15s; }
+.annual-section-header:hover { filter: brightness(0.97); }
+.annual-section-toggle { margin-left: auto; font-size: 11px; font-weight: 600; color: #94a3b8; }
+.annual-section-body { padding: 0 20px 16px; }
+.annual-funder-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+.annual-funder-row:last-child { border-bottom: none; }
+.annual-funder-name { flex: 1; font-size: 13px; color: #1e293b; }
+.annual-funder-monthly { font-size: 12px; color: #94a3b8; margin-right: 24px; white-space: nowrap; }
+.annual-funder-total { font-size: 15px; font-weight: 700; min-width: 210px; text-align: right; }
+.annual-total-row { display: flex; align-items: center; padding: 14px 0 4px; border-top: 2px solid #e2e8f0; margin-top: 8px; }
+.annual-year-select { padding: 8px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px; font-weight: 700; color: #1e293b; background: white; cursor: pointer; transition: border-color 0.15s; }
+.annual-year-select:focus { outline: none; border-color: #3b82f6; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>📊 Business Forecast · Jan 2026 – Dec 2029</h1>
+  <div class="summary-cards">
+    <div class="summary-card secured">
+      <div class="label">Total Secured</div>
+      <div class="value" id="sum-secured">—</div>
+    </div>
+    <div class="summary-card forecasted">
+      <div class="label">Total Forecasted</div>
+      <div class="value" id="sum-forecasted">—</div>
+    </div>
+    <div class="summary-card expenses">
+      <div class="label">2026 Monthly Expenses</div>
+      <div class="value" id="sum-expenses">—</div>
+    </div>
+    <div class="summary-card runway">
+      <div class="label">Runway</div>
+      <div class="value" id="sum-runway">—</div>
+      <div class="detail" id="sum-runway-detail"></div>
+    </div>
+  </div>
+  <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="scenario-label">Payroll:</span>
+      <div class="scenario-toggle">
+        <button class="scenario-btn active" id="btn-current" onclick="setScenario(false)">Current</button>
+        <button class="scenario-btn" id="btn-newroles" onclick="setScenario(true)">+ New Roles</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="scenario-label">CEO Salary:</span>
+      <div class="scenario-toggle">
+        <button class="scenario-btn active" id="btn-ceo-current" onclick="setCeoSalary(false)">R140k (Current)</button>
+        <button class="scenario-btn" id="btn-ceo-proposed" onclick="setCeoSalary(true)">R191,667 (Proposed)</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="scenario-label">Pipeline:</span>
+      <div class="scenario-toggle">
+        <button class="scenario-btn" id="btn-fn-neither" onclick="setFundingScenario('neither')">Neither Lands</button>
+        <button class="scenario-btn" id="btn-fn-e2e" onclick="setFundingScenario('e2e-only')">E2E Only</button>
+        <button class="scenario-btn active" id="btn-fn-both" onclick="setFundingScenario('both')">Both Land</button>
+      </div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+      <span id="sync-status" style="font-size:12px;font-weight:600;color:#94a3b8;">● Local</span>
+      <button class="scenario-btn" onclick="pullFromCloud()" style="font-size:11px;padding:4px 10px;background:rgba(255,255,255,0.1);color:white;border-radius:6px;">↓ Refresh</button>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('home',this)">🏠 Home</button>
+  <button class="tab-btn" onclick="switchTab('annual',this)">📆 Annual View</button>
+  <button class="tab-btn" onclick="switchTab('funding',this)">💰 Funding</button>
+  <button class="tab-btn" onclick="switchTab('expenses',this)">💸 Expenses</button>
+  <button class="tab-btn" onclick="switchTab('grid',this)">📅 Forecast Grid</button>
+  <button class="tab-btn" onclick="switchTab('runway',this)">🏦 Runway</button>
+</div>
+
+<!-- ══ TAB: HOME ══ -->
+<div class="tab-panel active" id="tab-home">
+
+  <!-- Dark hero -->
+  <div style="background:#1e293b;border-radius:14px;padding:32px;margin-bottom:28px;">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.35);margin-bottom:8px;">Business Forecast · Jan 2026 – Dec 2029</div>
+    <div style="font-size:30px;font-weight:900;color:white;margin-bottom:28px;letter-spacing:-0.5px;">Umuzi Photo Club</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+      <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:16px;">
+        <div style="font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Cash in Bank</div>
+        <div style="font-size:22px;font-weight:800;color:white;" id="home-cash">—</div>
+      </div>
+      <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:16px;">
+        <div style="font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Earned Runway</div>
+        <div style="font-size:22px;font-weight:800;color:#fcd34d;" id="home-runway">—</div>
+      </div>
+      <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:16px;">
+        <div style="font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Total Secured</div>
+        <div style="font-size:22px;font-weight:800;color:#34d399;" id="home-secured">—</div>
+      </div>
+      <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:16px;">
+        <div style="font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">2026 Net</div>
+        <div style="font-size:22px;font-weight:800;" id="home-net2026">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="card">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px;">
+      <div style="font-size:16px;font-weight:700;color:#1e293b;">4-Year Income vs Expenses</div>
+      <div style="font-size:12px;color:#94a3b8;" id="home-scenario-label"></div>
+    </div>
+    <div style="font-size:13px;color:#94a3b8;margin-bottom:20px;">Adjust the toggles above to see how scenarios change the picture</div>
+    <div id="home-chart-container" style="padding:8px 0;"></div>
+  </div>
+
+</div>
+
+<!-- ══ TAB: FUNDING ══ -->
+<div class="tab-panel" id="tab-funding">
+  <div class="card">
+    <div class="card-title"><span class="badge badge-secured">✓ SECURED</span> Confirmed Funding</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Funder Name</label><input type="text" id="s-name" placeholder="e.g. NDA Grant"></div>
+      <div class="form-group"><label>Total Amount (R)</label><input type="number" id="s-amount" placeholder="0" min="0" oninput="previewMonthly('s')"></div>
+      <div class="form-group"><label>Start Date</label><input type="month" id="s-start" value="2026-05"></div>
+      <div class="form-group"><label>Duration (months)</label><input type="number" id="s-duration" placeholder="12" min="1" oninput="previewMonthly('s')"></div>
+    </div>
+    <div class="add-row">
+      <button class="btn btn-secured" onclick="addFunder('secured')">+ Add Secured Funder</button>
+      <span class="monthly-preview" id="s-preview" style="color:#059669;"></span>
+    </div>
+    <div id="secured-list"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="badge badge-forecasted">~ PIPELINE</span> Forecasted / Pipeline Funding</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Funder Name</label><input type="text" id="f-name" placeholder="e.g. EU Horizon 2027"></div>
+      <div class="form-group"><label>Total Amount (R)</label><input type="number" id="f-amount" placeholder="0" min="0" oninput="previewMonthly('f')"></div>
+      <div class="form-group"><label>Start Date</label><input type="month" id="f-start" value="2026-05"></div>
+      <div class="form-group"><label>Duration (months)</label><input type="number" id="f-duration" placeholder="12" min="1" oninput="previewMonthly('f')"></div>
+    </div>
+    <div class="add-row">
+      <button class="btn btn-primary" onclick="addFunder('forecasted')">+ Add Forecasted Funder</button>
+      <span class="monthly-preview" id="f-preview" style="color:#2563eb;"></span>
+    </div>
+    <div id="forecasted-list"></div>
+  </div>
+</div>
+
+<!-- ══ TAB: EXPENSES ══ -->
+<div class="tab-panel" id="tab-expenses">
+
+  <!-- Salary & Scenarios -->
+  <div class="card">
+    <div class="card-title">👤 Salary &amp; Scenarios</div>
+    <div class="scenario-card-inner">
+      <div class="scenario-col">
+        <div class="scenario-col-label col-current">Current Payroll</div>
+        <div class="exp-input-field">
+          <label>Monthly Salary — 2026 base (R)</label>
+          <input type="number" id="salary-base" value="3000000" oninput="saveExpenses()">
+          <div style="font-size:11px;color:#64748b;margin-top:4px;">Current monthly payroll bill · +10% each Jan</div>
+        </div>
+      </div>
+      <div class="scenario-col">
+        <div class="scenario-col-label col-new">With New Roles</div>
+        <div class="exp-input-field">
+          <label>Additional monthly cost of new roles (R)</label>
+          <input type="number" id="salary-new-roles" value="679000" oninput="saveExpenses()">
+          <div style="font-size:11px;color:#64748b;margin-top:4px;">14 open roles from resourcing sheet (3 roles at '???' excluded). Added on top of current salary.</div>
+        </div>
+      </div>
+    </div>
+    <div id="salary-comparison-note" style="margin-top:12px;padding:10px 14px;background:#eff6ff;border-radius:8px;font-size:13px;color:#1e40af;display:none;"></div>
+  </div>
+
+  <!-- Operating Expenses -->
+  <div class="card">
+    <div class="card-title">🏢 Operating Expenses</div>
+    <div class="exp-input-field" style="max-width:280px;">
+      <label>Monthly Operating Expenses — 2026 base (R)</label>
+      <input type="number" id="opex-base" value="358000" oninput="saveExpenses()">
+      <div style="font-size:11px;color:#64748b;margin-top:4px;">+10% each January</div>
+    </div>
+  </div>
+
+  <!-- Freelance Academy -->
+  <div class="card">
+    <div class="card-title">🎓 Freelance Academy</div>
+    <div class="exp-input-field" style="max-width:280px;">
+      <label>Monthly Freelance Academy — 2026 base (R)</label>
+      <input type="number" id="fa-base" value="281170" oninput="saveExpenses()">
+      <div style="font-size:11px;color:#64748b;margin-top:4px;">+10% each January</div>
+    </div>
+  </div>
+
+  <!-- Explorer Gig Payments -->
+  <div class="card">
+    <div class="card-title">🧭 Explorer Gig Payments <span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px;">Fixed-term · +10% annual escalation</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+      <div class="exp-input-field">
+        <label>Monthly Amount (R)</label>
+        <input type="number" id="explorer-gig-base" value="0" oninput="saveExpenses()">
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">+10% each January</div>
+      </div>
+      <div class="exp-input-field">
+        <label>Start Month</label>
+        <input type="month" id="explorer-gig-start" value="2026-01" oninput="saveExpenses()">
+      </div>
+      <div class="exp-input-field">
+        <label>Duration (months)</label>
+        <input type="number" id="explorer-gig-duration" value="27" min="1" oninput="saveExpenses()">
+        <div style="font-size:11px;color:#64748b;margin-top:4px;" id="explorer-gig-range-label">Jan 2026 → Mar 2028</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TCX IC Payments -->
+  <div class="card">
+    <div class="card-title">🔗 TCX IC Payments <span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px;">Fixed-term · no annual escalation</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+      <div class="exp-input-field">
+        <label>Monthly Amount (R)</label>
+        <input type="number" id="tcxic-base" value="0" oninput="saveExpenses()">
+      </div>
+      <div class="exp-input-field">
+        <label>Start Month</label>
+        <input type="month" id="tcxic-start" value="2026-04" oninput="saveExpenses()">
+      </div>
+      <div class="exp-input-field">
+        <label>Duration (months)</label>
+        <input type="number" id="tcxic-duration" value="6" min="1" oninput="saveExpenses()">
+        <div style="font-size:11px;color:#64748b;margin-top:4px;" id="tcxic-range-label">Apr 2026 → Sep 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Starting Balance -->
+  <div class="card">
+    <div class="card-title">🏦 Starting Cash Balance</div>
+    <div class="exp-input-field" style="max-width:280px;">
+      <label>Cash on hand as of January 2026 (R)</label>
+      <input type="number" id="start-balance" placeholder="0" oninput="saveBalance()">
+    </div>
+    <div style="font-size:12px;color:#64748b;margin-top:8px;">Used for cumulative balance and runway calculation.</div>
+  </div>
+
+  <!-- Year-by-year escalation preview -->
+  <div class="card">
+    <div class="card-title">📈 Annual Escalation Preview <span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px;">(10% increase each year)</span></div>
+    <div id="escalation-preview"></div>
+  </div>
+
+</div>
+
+<!-- ══ TAB: ANNUAL VIEW ══ -->
+<div class="tab-panel" id="tab-annual">
+  <!-- Header row: title + year picker -->
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:20px;font-weight:800;color:#1e293b;">📆 Annual View</div>
+      <div style="font-size:13px;color:#64748b;margin-top:2px;">Full unabbreviated numbers · year-by-year breakdown</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+      <label style="font-size:13px;font-weight:600;color:#64748b;">Year:</label>
+      <select class="annual-year-select" id="annual-year-select" onchange="renderAnnualView()">
+        <option value="2026">2026</option>
+        <option value="2027">2027</option>
+        <option value="2028">2028</option>
+        <option value="2029">2029</option>
+      </select>
+    </div>
+  </div>
+  <!-- Summary cards -->
+  <div id="annual-summary-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;"></div>
+  <!-- Collapsible sections -->
+  <div id="annual-sections"></div>
+</div>
+
+<!-- ══ TAB: FORECAST GRID ══ -->
+<div class="tab-panel" id="tab-grid">
+  <div class="grid-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div>Secured Income</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div>Forecasted Income</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div>Expenses</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fef9c3;border:1px solid #ca8a04;"></div>Current Month</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fee2e2;border:1px solid #ef4444;"></div>Negative</div>
+    <span class="scenario-indicator" id="grid-scenario-indicator">Current Payroll</span>
+  </div>
+  <div class="scroll-hint">← Scroll horizontally to see all 48 months →</div>
+  <div class="grid-wrapper">
+    <table class="forecast-table" id="ftable"></table>
+  </div>
+</div>
+
+<!-- ══ TAB: RUNWAY ══ -->
+<div class="tab-panel" id="tab-runway">
+
+  <!-- Two runway views side by side -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+
+    <!-- View 1: Earned -->
+    <div style="background:#1e293b;border-radius:12px;padding:20px;color:white;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;opacity:.6;margin-bottom:4px;">VIEW 1 — EARNED RUNWAY</div>
+      <div style="font-size:12px;opacity:.7;margin-bottom:12px;">Force majeure / doomsday: only money owed for work already delivered</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <div><div style="font-size:11px;opacity:.6;">Bank</div><div style="font-size:16px;font-weight:700;color:#34d399;" id="v1-bank">—</div></div>
+        <div style="opacity:.4;font-size:20px;align-self:center;">+</div>
+        <div><div style="font-size:11px;opacity:.6;">Earned Receivables</div><div style="font-size:16px;font-weight:700;color:#93c5fd;" id="v1-recv">—</div></div>
+        <div style="opacity:.4;font-size:20px;align-self:center;">=</div>
+        <div><div style="font-size:11px;opacity:.6;">Total</div><div style="font-size:16px;font-weight:700;color:#fcd34d;" id="v1-total">—</div></div>
+      </div>
+      <div style="font-size:42px;font-weight:800;color:#fca5a5;" id="v1-months">—</div>
+      <div style="font-size:13px;opacity:.7;margin-top:2px;" id="v1-runout"></div>
+      <div style="margin-top:14px;background:rgba(255,255,255,.08);border-radius:8px;height:14px;overflow:hidden;">
+        <div id="v1-bar" style="height:100%;border-radius:8px;background:#ef4444;transition:width .5s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;opacity:.5;margin-top:4px;"><span>0</span><span>6mo</span><span>12mo</span><span>18mo</span><span>24mo</span></div>
+    </div>
+
+    <!-- View 2: Full Secured -->
+    <div style="background:#1e293b;border-radius:12px;padding:20px;color:white;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;opacity:.6;margin-bottom:4px;">VIEW 2 — FULL SECURED RUNWAY</div>
+      <div style="font-size:12px;opacity:.7;margin-bottom:12px;">All secured projects run to completion and all outstanding amounts are received</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <div><div style="font-size:11px;opacity:.6;">Bank</div><div style="font-size:16px;font-weight:700;color:#34d399;" id="v2-bank">—</div></div>
+        <div style="opacity:.4;font-size:20px;align-self:center;">+</div>
+        <div><div style="font-size:11px;opacity:.6;">Full Outstanding</div><div style="font-size:16px;font-weight:700;color:#93c5fd;" id="v2-recv">—</div></div>
+        <div style="opacity:.4;font-size:20px;align-self:center;">=</div>
+        <div><div style="font-size:11px;opacity:.6;">Total</div><div style="font-size:16px;font-weight:700;color:#fcd34d;" id="v2-total">—</div></div>
+      </div>
+      <div style="font-size:42px;font-weight:800;color:#34d399;" id="v2-months">—</div>
+      <div style="font-size:13px;opacity:.7;margin-top:2px;" id="v2-runout"></div>
+      <div style="margin-top:14px;background:rgba(255,255,255,.08);border-radius:8px;height:14px;overflow:hidden;">
+        <div id="v2-bar" style="height:100%;border-radius:8px;background:#10b981;transition:width .5s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;opacity:.5;margin-top:4px;"><span>0</span><span>6mo</span><span>12mo</span><span>18mo</span><span>24mo</span></div>
+    </div>
+  </div>
+
+  <!-- 12-month goal tracker -->
+  <div style="padding:12px 18px;border-radius:10px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;" id="goal-banner">
+    <span style="font-size:22px;">🎯</span>
+    <div id="goal-text" style="font-size:14px;font-weight:600;"></div>
+  </div>
+
+  <!-- Bank balance + receivables table -->
+  <div style="display:grid;grid-template-columns:220px 1fr;gap:20px;margin-bottom:20px;">
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-title">🏦 Bank Balance</div>
+      <div class="exp-input-field">
+        <label>Cash in bank today (R)</label>
+        <input type="number" id="rw-bank-input" oninput="saveRunway()" style="font-size:15px;font-weight:600;">
+      </div>
+      <div style="margin-top:16px;">
+        <div class="card-title" style="margin-bottom:8px;">🔥 Monthly Burn</div>
+        <div id="burn-table"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-title">📋 Receivables — Earned vs Full Outstanding</div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:10px;align-items:end;">
+        <div class="exp-input-field" style="margin:0;"><label>Funder</label><input type="text" id="rv-name" placeholder="Funder name"></div>
+        <div class="exp-input-field" style="margin:0;"><label>Earned (R)</label><input type="number" id="rv-earned" placeholder="0"></div>
+        <div class="exp-input-field" style="margin:0;"><label>Full Outstanding (R)</label><input type="number" id="rv-full" placeholder="0"></div>
+        <button class="btn btn-primary btn-sm" onclick="addReceivable()" style="white-space:nowrap;align-self:flex-end;">+ Add</button>
+      </div>
+      <div id="receivables-list"></div>
+    </div>
+  </div>
+
+  <!-- Month-by-month collapsible -->
+  <div style="margin-top:4px;">
+    <button onclick="toggleMonthBreakdown(this)" style="background:none;border:1px solid #e2e8f0;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;">
+      <span>📅 See month-by-month breakdown</span>
+      <span style="margin-left:auto;">▼</span>
+    </button>
+    <div id="month-breakdown-panel" style="display:none;margin-top:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title" style="color:#b91c1c;">📅 View 1 — Doomsday, month by month</div>
+          <div style="max-height:280px;overflow-y:auto;">
+            <table class="data-table" id="v1-month-table" style="font-size:12px;"></table>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title" style="color:#059669;">📅 View 2 — Full secured, month by month</div>
+          <div style="max-height:280px;overflow-y:auto;">
+            <table class="data-table" id="v2-month-table" style="font-size:12px;"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Forward 12-month cash flow -->
+  <div id="forward-runway-section"></div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// SUPABASE CONFIG
+// Fill these in after setting up your free Supabase project.
+// Leave as-is during Cowork editing — tool falls back to localStorage.
+// ═══════════════════════════════════════════════
+const SUPABASE_URL = 'https://tlvmnphyvmnoytjjoybx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_CNfWUlHz5V1RwqbcxXy3TA_MxNDtjkW';
+const SB_TABLE     = 'forecast_state';
+const SB_ROW       = 'main';
+
+const sbEnabled = SUPABASE_URL !== 'YOUR_SUPABASE_URL';
+
+function setSyncStatus(status) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  const map = {
+    local:   ['● Local',    '#94a3b8'],
+    saving:  ['⟳ Syncing…', '#fcd34d'],
+    saved:   ['● Saved',    '#34d399'],
+    offline: ['● Offline',  '#fca5a5'],
+    loading: ['⟳ Loading…', '#93c5fd'],
+  };
+  const [txt, col] = map[status] || map.local;
+  el.textContent = txt; el.style.color = col;
+  if (status === 'saved') setTimeout(() => setSyncStatus('live'), 2500);
+  if (status === 'live') { el.textContent = '● Live'; el.style.color = '#34d399'; }
+}
+
+async function supabaseFetch(method, body) {
+  const url = `${SUPABASE_URL}/rest/v1/${SB_TABLE}?id=eq.${SB_ROW}`;
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'application/json',
+    'Prefer': 'resolution=merge-duplicates,return=minimal',
+  };
+  return fetch(method === 'GET' ? url + '&select=state' : `${SUPABASE_URL}/rest/v1/${SB_TABLE}`, {
+    method, headers, body: body ? JSON.stringify(body) : undefined
+  });
+}
+
+async function supabaseLoad() {
+  if (!sbEnabled) return null;
+  setSyncStatus('loading');
+  try {
+    const res  = await supabaseFetch('GET');
+    const rows = await res.json();
+    setSyncStatus('saved');
+    return rows && rows.length > 0 ? rows[0].state : null;
+  } catch(e) { setSyncStatus('offline'); return null; }
+}
+
+async function supabaseSave(state) {
+  if (!sbEnabled) return;
+  setSyncStatus('saving');
+  try {
+    await supabaseFetch('POST', { id: SB_ROW, state, updated_at: new Date().toISOString() });
+    setSyncStatus('saved');
+  } catch(e) { setSyncStatus('offline'); }
+}
+
+async function pullFromCloud() {
+  if (!sbEnabled) { alert('Supabase not configured yet — running in local mode.'); return; }
+  const cloudState = await supabaseLoad();
+  if (cloudState) {
+    S = { ...S, ...cloudState };
+    if (cloudState.receivables) S.receivables = cloudState.receivables;
+    if (cloudState.funders)     S.funders     = cloudState.funders;
+    restoreFormValues(); render();
+    setSyncStatus('saved');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════
+const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const YEAR_COLORS  = { 2026:'#3b82f6', 2027:'#10b981', 2028:'#f59e0b', 2029:'#8b5cf6' };
+const NUM_MONTHS   = 48;
+const START_YEAR   = 2026;
+const NEW_ROLES_EFFECTIVE = '2026-06'; // New roles & CEO delta effective from June 2026
+
+const ALL_MONTHS = [];
+for (let i = 0; i < NUM_MONTHS; i++) {
+  const y = START_YEAR + Math.floor(i / 12);
+  const m = i % 12;
+  ALL_MONTHS.push({ idx:i, year:y, month:m, label:MONTH_LABELS[m], key:`${y}-${String(m+1).padStart(2,'0')}` });
+}
+
+function nowKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════════════
+// DEFAULT FUNDERS (from Excel)
+// ═══════════════════════════════════════════════
+const DEFAULT_FUNDERS = [
+  {"id":"f001","type":"secured","name":"BBD Internship 2025","amount":830000,"startDate":"2025-02","duration":12},
+  {"id":"f002","type":"secured","name":"Kariega Foundation Trust","amount":166000,"startDate":"2025-04","duration":12},
+  {"id":"f003","type":"secured","name":"BBD Learnership 2025","amount":1660000,"startDate":"2025-02","duration":12},
+  {"id":"f004","type":"secured","name":"Naspers","amount":2501250,"startDate":"2025-04","duration":12},
+  {"id":"f005","type":"secured","name":"Equal Experts SA","amount":498000,"startDate":"2025-08","duration":12},
+  {"id":"f006","type":"secured","name":"VMLYR","amount":581000,"startDate":"2025-08","duration":12},
+  {"id":"f007","type":"secured","name":"Capitec 2025","amount":1560000,"startDate":"2025-03","duration":12},
+  {"id":"f008","type":"secured","name":"Capitec 2026","amount":936000,"startDate":"2025-09","duration":12},
+  {"id":"f009","type":"secured","name":"Wesbank","amount":1250000,"startDate":"2025-12","duration":6},
+  {"id":"f010","type":"secured","name":"Avatar X","amount":249000,"startDate":"2026-02","duration":12},
+  {"id":"f011","type":"secured","name":"BBD Learnership 2026","amount":1245000,"startDate":"2026-02","duration":12},
+  {"id":"f012","type":"secured","name":"BBD Internship 2026","amount":1245000,"startDate":"2026-02","duration":12},
+  {"id":"f013","type":"secured","name":"Yoma","amount":20130000,"startDate":"2024-07","duration":36},
+  {"id":"f014","type":"secured","name":"UNICEF South Africa","amount":3398983.5,"startDate":"2025-08","duration":6},
+  {"id":"f015","type":"secured","name":"IDC","amount":25000000,"startDate":"2025-04","duration":18},
+  {"id":"f016","type":"secured","name":"Maria Marina","amount":4500000,"startDate":"2025-04","duration":36},
+  {"id":"f017","type":"secured","name":"TCX","amount":3555558,"startDate":"2025-09","duration":12},
+  {"id":"f018","type":"secured","name":"Jobs Fund","amount":36398225.48,"startDate":"2026-05","duration":36},
+  {"id":"f019","type":"secured","name":"KNIF Y1","amount":1500000,"startDate":"2026-04","duration":12},
+  {"id":"f020","type":"secured","name":"KNIF Y2","amount":1000000,"startDate":"2027-04","duration":12},
+  {"id":"f021","type":"secured","name":"KNIF Y3","amount":500000,"startDate":"2028-04","duration":12},
+  {"id":"f022","type":"secured","name":"NASPERS LABS","amount":3041750,"startDate":"2026-05","duration":12},
+  {"id":"f023","type":"forecasted","name":"SAP E2E","amount":6600000,"startDate":"2026-07","duration":18},
+  {"id":"f024","type":"forecasted","name":"TCX","amount":8400000,"startDate":"2026-06","duration":12}
+];
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let S = {
+  funders:        DEFAULT_FUNDERS,
+  salaryBase:     3000000,  // monthly, 2026 base (R3m/mo current bill)
+  opexBase:       358000,   // monthly, 2026 base
+  faBase:         281170,   // monthly, 2026 base
+  salaryNewRoles:    679000,  // 14 new roles with known budgets
+  useNewRoles:       false,   // payroll scenario toggle
+  ceoSalaryProposed: false,   // CEO salary toggle
+  ceoSalaryDelta:    51667,   // R191,667 − R140,000
+  fundingScenario:   'both',  // 'neither' | 'e2e-only' | 'both'
+  explorerGigBase:        0,          // monthly 2026 base — Explorer Gig Payments
+  explorerGigStartDate:   '2026-01',  // first active month
+  explorerGigDuration:    27,         // active for 27 months (Jan 2026 → Mar 2028)
+  tcxicBase:         0,       // monthly amount — TCX IC Payments (fixed, no escalation)
+  tcxicStartDate:    '2026-04', // first active month
+  tcxicDuration:     6,         // active for this many months only
+  startBalance:      0,
+  bankBalance:    13800000,
+  receivables: [
+    { id:'rv1', funder:'Equal Experts SA', earned:572000,      full:572000 },
+    { id:'rv2', funder:'Yoma',             earned:4667432.38,  full:6715591.74 },
+    { id:'rv3', funder:'IDC',              earned:4000000,     full:12000000 },
+    { id:'rv4', funder:'Maria Marina',     earned:1500000,     full:3000000 },
+    { id:'rv5', funder:'KNIF Y2',          earned:0,           full:1000000 },
+    { id:'rv6', funder:'KNIF Y3',          earned:0,           full:500000 },
+    { id:'rv7', funder:'Jobs Fund',        earned:1406685.87,  full:36398225.48 },
+    { id:'rv8', funder:'NASPERS LABS',     earned:253479.17,   full:3041750 },
+    { id:'rv9', funder:'TCX',             earned:1059411,     full:1059411 }
+  ]
+};
+
+async function loadState() {
+  // 1. Try Supabase cloud first
+  const cloudState = await supabaseLoad();
+  if (cloudState) {
+    S = { ...S, ...cloudState };
+    if (cloudState.receivables) S.receivables = cloudState.receivables;
+    if (cloudState.funders)     S.funders     = cloudState.funders;
+    // Mirror to localStorage as offline backup
+    localStorage.setItem('biz-forecast-v4', JSON.stringify(S));
+    return;
+  }
+  // 2. Fall back to localStorage
+  try {
+    const raw = localStorage.getItem('biz-forecast-v4');
+    if (raw) {
+      const saved = JSON.parse(raw);
+      S = { ...S, ...saved };
+      if (saved.receivables) S.receivables = saved.receivables;
+    }
+  } catch(e) {}
+  if (!sbEnabled) setSyncStatus('local');
+
+  // ── Migrations ──
+  // rv9: TCX recognized income (earned = full) — adds to forward starting position
+  if (!S.receivables) S.receivables = [];
+  if (!S.receivables.find(r => r.id === 'rv9')) {
+    S.receivables.push({ id:'rv9', funder:'TCX', earned:1059411, full:1059411 });
+    persist();
+  }
+  // Explorer Gig fixed-term defaults (added in later session)
+  if (!S.explorerGigStartDate) { S.explorerGigStartDate = '2026-01'; persist(); }
+  if (!S.explorerGigDuration)  { S.explorerGigDuration  = 27;        persist(); }
+}
+function persist() {
+  localStorage.setItem('biz-forecast-v4', JSON.stringify(S));
+  supabaseSave(S); // async, non-blocking — fire and forget
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+// ═══════════════════════════════════════════════
+// EXPENSE ENGINE — 10% annual escalation
+// ═══════════════════════════════════════════════
+function escalate(base, year) {
+  return (base || 0) * Math.pow(1.10, year - START_YEAR);
+}
+
+// monthKey optional — if provided, new roles / CEO delta only apply from NEW_ROLES_EFFECTIVE
+function getActiveSalaryBase(monthKey) {
+  let base = S.salaryBase || 0;
+  const newRolesActive = !monthKey || monthKey >= NEW_ROLES_EFFECTIVE;
+  if (newRolesActive && S.useNewRoles)       base += (S.salaryNewRoles || 0);
+  if (newRolesActive && S.ceoSalaryProposed) base += (S.ceoSalaryDelta || 0);
+  return base;
+}
+
+// Returns true if monthKey falls within the Explorer Gig active window
+function explorerGigActiveFor(monthKey) {
+  if (!(S.explorerGigBase > 0) || !S.explorerGigStartDate || !S.explorerGigDuration) return false;
+  const [sy, sm] = S.explorerGigStartDate.split('-').map(Number);
+  const [my, mm] = monthKey.split('-').map(Number);
+  const startIdx = (sy - START_YEAR) * 12 + (sm - 1);
+  const endIdx   = startIdx + (S.explorerGigDuration || 0) - 1;
+  const mIdx     = (my - START_YEAR) * 12 + (mm - 1);
+  return mIdx >= startIdx && mIdx <= endIdx;
+}
+
+// Returns true if monthKey falls within the TCX IC active window
+function tcxicActiveFor(monthKey) {
+  if (!(S.tcxicBase > 0) || !S.tcxicStartDate || !S.tcxicDuration) return false;
+  const [sy, sm] = S.tcxicStartDate.split('-').map(Number);
+  const [my, mm] = monthKey.split('-').map(Number);
+  const startIdx = (sy - START_YEAR) * 12 + (sm - 1);
+  const endIdx   = startIdx + (S.tcxicDuration || 0) - 1;
+  const mIdx     = (my - START_YEAR) * 12 + (mm - 1);
+  return mIdx >= startIdx && mIdx <= endIdx;
+}
+
+function getMonthExpenses(year, month) {
+  // month is 1–12; if omitted assumes start of year (for display only)
+  const key    = month ? `${year}-${String(month).padStart(2,'0')}` : `${year}-01`;
+  const salary   = escalate(getActiveSalaryBase(key), year);
+  const opex     = escalate(S.opexBase, year);
+  const fa       = escalate(S.faBase, year);
+  const explorer = explorerGigActiveFor(key) ? escalate(S.explorerGigBase || 0, year) : 0;
+  // TCX IC: fixed amount, no escalation, only active within its date window
+  const tcxic    = tcxicActiveFor(key) ? (S.tcxicBase || 0) : 0;
+  return { salary, opex, fa, explorer, tcxic, total: salary + opex + fa + explorer + tcxic };
+}
+
+// Sum expenses over all 12 months of a year (accounts for mid-year start of new roles in 2026)
+function getYearlyExpenses(year) {
+  let sal = 0, opex = 0, fa = 0, explorer = 0, tcxic = 0;
+  for (let m = 1; m <= 12; m++) {
+    const e = getMonthExpenses(year, m);
+    sal      += e.salary;
+    opex     += e.opex;
+    fa       += e.fa;
+    explorer += e.explorer;
+    tcxic    += e.tcxic;
+  }
+  return { salary: sal, opex, fa, explorer, tcxic, total: sal + opex + fa + explorer + tcxic };
+}
+
+function getActiveForecastedFunders() {
+  const all = S.funders.filter(f => f.type === 'forecasted');
+  if (S.fundingScenario === 'neither')  return [];
+  if (S.fundingScenario === 'e2e-only') return all.filter(f =>
+    f.name.toLowerCase().includes('sap') || f.name.toLowerCase().includes('e2e'));
+  return all; // 'both'
+}
+
+// ═══════════════════════════════════════════════
+// FUNDER MONTHLY ALLOCATION
+// ═══════════════════════════════════════════════
+function funderMonthlyFor(funder, monthKey) {
+  const [sy, sm] = funder.startDate.split('-').map(Number);
+  const [my, mm] = monthKey.split('-').map(Number);
+  const startIdx = (sy - START_YEAR) * 12 + (sm - 1);
+  const endIdx   = startIdx + funder.duration - 1;
+  const mIdx     = (my - START_YEAR) * 12 + (mm - 1);
+  return (mIdx >= startIdx && mIdx <= endIdx && funder.duration > 0)
+    ? funder.amount / funder.duration : 0;
+}
+
+// ═══════════════════════════════════════════════
+// BUILD FORECAST
+// ═══════════════════════════════════════════════
+function buildForecast() {
+  const activeFcst = getActiveForecastedFunders();
+  return ALL_MONTHS.map(m => {
+    const secIncome  = S.funders.filter(f=>f.type==='secured').reduce((s,f)=>s+funderMonthlyFor(f,m.key),0);
+    const fcstIncome = activeFcst.reduce((s,f)=>s+funderMonthlyFor(f,m.key),0);
+    const totalIn    = secIncome + fcstIncome;
+    const exp        = getMonthExpenses(m.year, m.month + 1); // month is 0-based in ALL_MONTHS
+    const net        = totalIn - exp.total;
+    return { ...m, secIncome, fcstIncome, totalIn, exp, net };
+  });
+}
+
+function calcRunway(forecast) {
+  let bal = S.startBalance || 0;
+  const cur = nowKey();
+  let months = 0, runOutDate = null;
+  for (let i = 0; i < forecast.length; i++) {
+    if (forecast[i].key < cur) continue;
+    bal += forecast[i].net;
+    if (bal > 0) months++;
+    else if (!runOutDate) { runOutDate = `${forecast[i].label} ${forecast[i].year}`; break; }
+  }
+  return { months, runOutDate };
+}
+
+// ═══════════════════════════════════════════════
+// FORMAT
+// ═══════════════════════════════════════════════
+function fmtR(n) {
+  if (n === null || n === undefined || isNaN(n) || n === 0) return '—';
+  const abs = Math.abs(n);
+  let s;
+  if (abs >= 1000000) s = 'R' + (abs/1000000).toFixed(1) + 'm';
+  else if (abs >= 1000) s = 'R' + Math.round(abs/1000) + 'k';
+  else s = 'R' + Math.round(abs);
+  return n < 0 ? '-' + s : s;
+}
+function fmtBig(n) { return 'R ' + Math.round(n||0).toLocaleString('en-ZA'); }
+function fmtFull(n) { return 'R ' + Math.round(n||0).toLocaleString('en-ZA'); }
+
+// ═══════════════════════════════════════════════
+// HOME / LANDING PAGE
+// ═══════════════════════════════════════════════
+function renderHome() {
+  const years = [2026, 2027, 2028, 2029];
+
+  // Income per year (secured + active forecasted)
+  const incomeByYear = years.map(y =>
+    [...S.funders.filter(f => f.type === 'secured'), ...getActiveForecastedFunders()]
+      .reduce((s, f) => s + funderAnnualFor(f, y), 0)
+  );
+  // Expenses per year (month-accurate)
+  const expensesByYear = years.map(y => getYearlyExpenses(y).total);
+  const netByYear      = years.map((y, i) => incomeByYear[i] - expensesByYear[i]);
+
+  // Hero metrics
+  const bank    = S.bankBalance || 0;
+  const earned  = (S.receivables || []).reduce((s,r) => s + (r.earned||0), 0);
+  const v1      = runwayMonthLoop(bank + earned);
+  const totSec  = S.funders.filter(f => f.type === 'secured').reduce((s,f) => s + f.amount, 0);
+  const net2026 = netByYear[0];
+
+  const setEl = (id, val, color) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = val;
+    if (color) el.style.color = color;
+  };
+
+  setEl('home-cash',    fmtFull(bank));
+  setEl('home-runway',  typeof v1.runMonths === 'number' ? v1.runMonths + ' months' : '5yr+');
+  setEl('home-secured', fmtFull(totSec));
+  setEl('home-net2026', (net2026 < 0 ? '−' : '') + fmtFull(Math.abs(net2026)),
+        net2026 >= 0 ? '#34d399' : '#fca5a5');
+
+  // Scenario label
+  const scenLabel = [
+    S.useNewRoles ? '+ New Roles' : 'Current Payroll',
+    S.ceoSalaryProposed ? '· CEO R191k' : '',
+    S.fundingScenario === 'neither' ? '· No Pipeline' :
+    S.fundingScenario === 'e2e-only' ? '· E2E Only' : '· Both Land'
+  ].filter(Boolean).join(' ');
+  setEl('home-scenario-label', scenLabel);
+
+  // Chart — pure HTML bars, no external library
+  const container = document.getElementById('home-chart-container');
+  if (!container) return;
+
+  const yearColors = { 2026:'#3b82f6', 2027:'#10b981', 2028:'#f59e0b', 2029:'#8b5cf6' };
+  const maxVal = Math.max(...incomeByYear, ...expensesByYear, 1);
+  const chartH  = 200;
+
+  // Y-axis reference lines
+  const refVals = [0.25, 0.5, 0.75, 1.0].map(p => ({ pct: p, val: p * maxVal }));
+  const gridLines = refVals.map(r =>
+    `<div style="position:absolute;bottom:${Math.round(r.pct * chartH)}px;left:40px;right:0;border-top:1px dashed #e2e8f0;pointer-events:none;">
+       <span style="position:absolute;left:-38px;top:-8px;font-size:10px;color:#94a3b8;white-space:nowrap;">R${(r.val/1000000).toFixed(0)}m</span>
+     </div>`
+  ).join('');
+
+  const barGroups = years.map((y, i) => {
+    const inc  = incomeByYear[i];
+    const exp  = expensesByYear[i];
+    const net  = netByYear[i];
+    const incH = Math.max(3, Math.round((inc / maxVal) * chartH));
+    const expH = Math.max(3, Math.round((exp / maxVal) * chartH));
+    const netCol = net >= 0 ? '#15803d' : '#b91c1c';
+    const col    = yearColors[y];
+    return `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:11px;font-weight:800;color:${netCol};margin-bottom:6px;white-space:nowrap;">
+          ${net >= 0 ? '+' : '−'}${fmtR(Math.abs(net))}
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:3px;height:${chartH}px;width:80%;justify-content:center;">
+          <div style="flex:1;background:rgba(16,185,129,0.18);border:2px solid #10b981;border-radius:5px 5px 0 0;height:${incH}px;transition:height .4s;" title="Income ${fmtFull(inc)}"></div>
+          <div style="flex:1;background:rgba(239,68,68,0.12);border:2px solid #ef4444;border-radius:5px 5px 0 0;height:${expH}px;transition:height .4s;" title="Expenses ${fmtFull(exp)}"></div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:${col};margin-top:8px;">${y}</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:2px;text-align:center;">${fmtR(inc)}<br>${fmtR(exp)}</div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="position:relative;padding-left:40px;">
+      ${gridLines}
+      <div style="display:flex;gap:12px;align-items:flex-end;position:relative;z-index:1;">
+        ${barGroups}
+      </div>
+    </div>
+    <div style="display:flex;gap:20px;justify-content:center;margin-top:18px;font-size:12px;color:#64748b;flex-wrap:wrap;">
+      <span style="display:flex;align-items:center;gap:5px;">
+        <span style="display:inline-block;width:10px;height:10px;background:rgba(16,185,129,0.18);border:2px solid #10b981;border-radius:2px;"></span>Income
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;">
+        <span style="display:inline-block;width:10px;height:10px;background:rgba(239,68,68,0.12);border:2px solid #ef4444;border-radius:2px;"></span>Expenses
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;color:#64748b;">
+        <span style="font-weight:700;">±</span>&nbsp;Net shown above each year
+      </span>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// SUMMARY BAR
+// ═══════════════════════════════════════════════
+function updateSummary() {
+  const totSec  = S.funders.filter(f=>f.type==='secured').reduce((s,f)=>s+f.amount,0);
+  const totFcst = S.funders.filter(f=>f.type==='forecasted').reduce((s,f)=>s+f.amount,0);
+  const exp2026 = getMonthExpenses(2026, 6); // Show Jun 2026 rate (post new-roles effective date)
+  const forecast = buildForecast();
+  const { months, runOutDate } = calcRunway(forecast);
+
+  document.getElementById('sum-secured').textContent    = fmtBig(totSec);
+  document.getElementById('sum-forecasted').textContent  = fmtBig(totFcst);
+  document.getElementById('sum-expenses').textContent    = fmtBig(exp2026.total) + '/mo';
+
+  if (runOutDate) {
+    document.getElementById('sum-runway').textContent       = months + ' mo';
+    document.getElementById('sum-runway-detail').textContent = 'Turns –ve: ' + runOutDate;
+  } else if (months > 0) {
+    document.getElementById('sum-runway').textContent       = '4 yr+';
+    document.getElementById('sum-runway-detail').textContent = 'Positive throughout';
+  } else {
+    document.getElementById('sum-runway').textContent       = '—';
+    document.getElementById('sum-runway-detail').textContent = 'Add data to calculate';
+  }
+
+  // Sync all toggle buttons
+  document.getElementById('btn-current').classList.toggle('active', !S.useNewRoles);
+  document.getElementById('btn-newroles').classList.toggle('active', S.useNewRoles);
+  document.getElementById('btn-ceo-current').classList.toggle('active', !S.ceoSalaryProposed);
+  document.getElementById('btn-ceo-proposed').classList.toggle('active', S.ceoSalaryProposed);
+  document.getElementById('btn-fn-neither').classList.toggle('active', S.fundingScenario==='neither');
+  document.getElementById('btn-fn-e2e').classList.toggle('active', S.fundingScenario==='e2e-only');
+  document.getElementById('btn-fn-both').classList.toggle('active', S.fundingScenario==='both');
+}
+
+// ═══════════════════════════════════════════════
+// RENDER FUNDERS
+// ═══════════════════════════════════════════════
+function renderFunders() {
+  ['secured','forecasted'].forEach(type => {
+    const list = S.funders.filter(f=>f.type===type);
+    const el   = document.getElementById(type+'-list');
+    if (!list.length) { el.innerHTML = '<div class="empty-state">No funders added yet</div>'; return; }
+    el.innerHTML = `<table class="data-table">
+      <thead><tr><th>Funder</th><th>Total (R)</th><th>Start</th><th>Duration</th><th>Monthly Alloc.</th><th>End</th><th></th></tr></thead>
+      <tbody>${list.map(f => {
+        const [sy,sm] = f.startDate.split('-').map(Number);
+        const end = new Date(sy, sm-1+f.duration-1);
+        const endLbl = MONTH_LABELS[end.getMonth()] + ' ' + end.getFullYear();
+        const monthly = f.duration > 0 ? f.amount/f.duration : 0;
+        const col = type==='secured' ? '#059669' : '#2563eb';
+        return `<tr>
+          <td><strong>${f.name}</strong></td>
+          <td>R ${Math.round(f.amount).toLocaleString('en-ZA')}</td>
+          <td>${f.startDate}</td>
+          <td>${f.duration} mo</td>
+          <td style="color:${col};font-weight:700;">R ${Math.round(monthly).toLocaleString('en-ZA')}/mo</td>
+          <td style="color:#64748b;">${endLbl}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="removeFunder('${f.id}')">✕</button></td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+  });
+}
+
+// ═══════════════════════════════════════════════
+// RENDER ESCALATION PREVIEW TABLE
+// ═══════════════════════════════════════════════
+function renderEscalationPreview() {
+  const yearColors = { 2026:'#3b82f6', 2027:'#10b981', 2028:'#f59e0b', 2029:'#8b5cf6' };
+  const years = [2026, 2027, 2028, 2029];
+
+  const rows = [
+    { label: '👤 Salary (Current)', base: S.salaryBase },
+    ...(S.salaryNewRoles > 0 ? [{ label: '👤 Salary (With New Roles)', base: (S.salaryBase||0)+(S.salaryNewRoles||0) }] : []),
+    { label: '🏢 Operating Expenses', base: S.opexBase },
+    { label: '🎓 Freelance Academy', base: S.faBase },
+    ...((S.explorerGigBase||0) > 0 ? [{ label: '🧭 Explorer Gig Payments', base: S.explorerGigBase, yearlyOverride: years.map(y => getYearlyExpenses(y).explorer) }] : []),
+    ...((S.tcxicBase||0) > 0 ? [{ label: '🔗 TCX IC Payments', base: S.tcxicBase, yearlyOverride: years.map(y => getYearlyExpenses(y).tcxic) }] : []),
+  ];
+
+  const salBase = S.useNewRoles ? (S.salaryBase||0)+(S.salaryNewRoles||0) : (S.salaryBase||0);
+
+  let h = `<table class="escalation-table">
+    <thead><tr><th>Category</th>`;
+  years.forEach(y => {
+    h += `<th><span class="year-badge" style="background:${yearColors[y]}20;color:${yearColors[y]};">${y}</span></th>`;
+  });
+  h += `<th>4-Yr Total</th></tr></thead><tbody>`;
+
+  rows.forEach(r => {
+    const yearly = r.yearlyOverride || years.map(y => escalate(r.base, y) * 12);
+    const total4yr = yearly.reduce((s,v)=>s+v, 0);
+    h += `<tr><td>${r.label}</td>`;
+    yearly.forEach((v,i) => {
+      const mo = v/12;
+      h += `<td><div style="font-weight:600;">${fmtFull(mo)}<span style="font-size:10px;color:#94a3b8;">/mo</span></div><div style="font-size:11px;color:#64748b;">${fmtFull(v)}/yr</div></td>`;
+    });
+    h += `<td style="font-weight:700;">${fmtFull(total4yr)}</td></tr>`;
+  });
+
+  // Total row — uses getYearlyExpenses to account for Jun 2026 new-roles start date
+  const totYearlyScenario = years.map(y => getYearlyExpenses(y).total);
+  const tot4yr = totYearlyScenario.reduce((s,v)=>s+v,0);
+  const scenarioNote = S.useNewRoles || S.ceoSalaryProposed
+    ? '(New Roles/CEO from Jun 2026)' : '(Current Payroll)';
+  h += `<tr class="total-row"><td>TOTAL ${scenarioNote}</td>`;
+  totYearlyScenario.forEach(v => {
+    const mo = v/12;
+    h += `<td><div style="font-weight:700;">${fmtFull(mo)}<span style="font-size:10px;">/mo</span></div><div style="font-size:11px;">${fmtFull(v)}/yr</div></td>`;
+  });
+  h += `<td style="font-weight:700;">${fmtFull(tot4yr)}</td></tr>`;
+
+  h += '</tbody></table>';
+
+  // Comparison note if new roles set
+  const noteEl = document.getElementById('salary-comparison-note');
+  if (S.salaryNewRoles > 0) {
+    const diff2026 = escalate(S.salaryNewRoles, 2026) * 12;
+    const diff4yr  = [2026,2027,2028,2029].reduce((s,y)=>s+escalate(S.salaryNewRoles,y)*12,0);
+    noteEl.style.display = 'block';
+    noteEl.innerHTML = `Adding new roles costs an additional <strong>${fmtFull(escalate(S.salaryNewRoles,2026))}/mo</strong> in 2026 (${fmtFull(diff2026)}/yr), growing to <strong>${fmtFull(escalate(S.salaryNewRoles,2029))}/mo</strong> by 2029. Total additional cost over 4 years: <strong>${fmtFull(diff4yr)}</strong>.`;
+  } else {
+    noteEl.style.display = 'none';
+  }
+
+  document.getElementById('escalation-preview').innerHTML = h;
+}
+
+// ═══════════════════════════════════════════════
+// RENDER FORECAST GRID
+// ═══════════════════════════════════════════════
+function renderGrid() {
+  const forecast = buildForecast();
+  const curKey   = nowKey();
+
+  // Grid scenario indicator
+  const gi = document.getElementById('grid-scenario-indicator');
+  const fnLabel = S.fundingScenario==='neither'?'Neither Lands':S.fundingScenario==='e2e-only'?'E2E Only':'Both Land';
+  const salLabel = S.useNewRoles ? '+New Roles' : 'Current Payroll';
+  const ceoLabel = S.ceoSalaryProposed ? ' · CEO R191k' : '';
+  gi.textContent = `${fnLabel} · ${salLabel}${ceoLabel}`;
+  gi.className   = 'scenario-indicator ' + (S.useNewRoles ? 'si-newroles' : 'si-current');
+
+  let h = '<thead>';
+
+  // Year headers
+  h += `<tr><th class="row-header">Category / Month →</th>`;
+  [2026,2027,2028,2029].forEach(y => {
+    h += `<th colspan="12" class="year-header" style="border-left:3px solid ${YEAR_COLORS[y]};">${y}</th>`;
+  });
+  h += '</tr>';
+
+  // Month headers
+  h += `<tr><th class="row-header" style="background:#1e293b;font-size:11px;font-weight:400;"></th>`;
+  ALL_MONTHS.forEach(m => {
+    const isCur  = m.key === curKey;
+    const isPast = m.key < curKey;
+    const bleft  = m.month === 0 ? `3px solid ${YEAR_COLORS[m.year]}` : '1px solid #475569';
+    h += `<th class="${isCur?'cur-month-header':'month-cell'} ${isPast?'past-col':''}" style="border-left:${bleft};">${m.label}</th>`;
+  });
+  h += '</tr></thead><tbody>';
+
+  function cell(val, isCur, isPast, forceCls, extraStyle) {
+    const valCls = forceCls || (val > 0 ? 'positive' : val < 0 ? 'negative' : 'zero-val');
+    const cls = [valCls, isCur ? 'cur-month-cell' : '', isPast ? 'past-col' : ''].filter(Boolean).join(' ');
+    const style = extraStyle ? `style="${extraStyle}"` : '';
+    return `<td class="${cls}" ${style}>${val !== 0 ? fmtR(val) : '—'}</td>`;
+  }
+
+  // ── SECURED INCOME ──
+  h += `<tr><td class="row-label" colspan="${NUM_MONTHS+1}" style="background:#f0fdf4;color:#166534;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;padding:6px 12px;">💚 Secured Funding</td></tr>`;
+  const secFunders = S.funders.filter(f=>f.type==='secured');
+  if (!secFunders.length) {
+    h += `<tr><td class="row-label indent" colspan="${NUM_MONTHS+1}" style="color:#94a3b8;">No secured funders</td></tr>`;
+  } else {
+    secFunders.forEach(f => {
+      h += `<tr><td class="row-label indent">${f.name}</td>`;
+      ALL_MONTHS.forEach(m => {
+        const v = funderMonthlyFor(f, m.key);
+        h += cell(v, m.key===curKey, m.key<curKey, v>0?'positive':'zero-val');
+      });
+      h += '</tr>';
+    });
+  }
+  h += `<tr class="subtotal-row"><td class="row-label" style="background:#bbf7d0;">▶ Total Secured</td>`;
+  forecast.forEach(m => {
+    const v = m.secIncome; const isCur = m.key===curKey; const isPast = m.key<curKey;
+    h += cell(v, isCur, isPast, v>0?'positive':'zero-val', isCur?'':'background:#bbf7d0;');
+  });
+  h += '</tr>';
+
+  // ── FORECASTED INCOME ──
+  const scenarioLabel = S.fundingScenario==='neither'?'💙 Pipeline — NEITHER LANDS (excluded)':S.fundingScenario==='e2e-only'?'💙 Pipeline — E2E ONLY':'💙 Forecasted / Pipeline — BOTH LAND';
+  h += `<tr><td class="row-label" colspan="${NUM_MONTHS+1}" style="background:#eff6ff;color:#1e40af;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;padding:6px 12px;">${scenarioLabel}</td></tr>`;
+  const fcstFunders = getActiveForecastedFunders();
+  if (!fcstFunders.length) {
+    h += `<tr><td class="row-label indent" colspan="${NUM_MONTHS+1}" style="color:#94a3b8;">No forecasted funders</td></tr>`;
+  } else {
+    fcstFunders.forEach(f => {
+      h += `<tr><td class="row-label indent">${f.name}</td>`;
+      ALL_MONTHS.forEach(m => {
+        const v = funderMonthlyFor(f, m.key);
+        h += cell(v, m.key===curKey, m.key<curKey, v>0?'positive':'zero-val');
+      });
+      h += '</tr>';
+    });
+  }
+  h += `<tr class="subtotal-row"><td class="row-label" style="background:#bfdbfe;">▶ Total Forecasted</td>`;
+  forecast.forEach(m => {
+    const v = m.fcstIncome; const isCur = m.key===curKey; const isPast = m.key<curKey;
+    h += cell(v, isCur, isPast, v>0?'positive':'zero-val', isCur?'':'background:#bfdbfe;');
+  });
+  h += '</tr>';
+
+  // ── TOTAL INCOME ──
+  h += `<tr class="grand-total-row"><td class="row-label" style="background:#86efac;font-size:13px;">▶▶ TOTAL INCOME</td>`;
+  forecast.forEach(m => {
+    const v = m.totalIn; const isCur = m.key===curKey; const isPast = m.key<curKey;
+    h += cell(v, isCur, isPast, v>0?'positive':'zero-val', (isCur?'':'background:#86efac;')+'font-weight:700;');
+  });
+  h += '</tr>';
+
+  // ── EXPENSES ──
+  const expLabel = [S.useNewRoles?'+ New Roles':'Current Payroll', S.ceoSalaryProposed?'CEO R191k':'CEO R140k', '+10%/yr'].join(' · ');
+  h += `<tr><td class="row-label" colspan="${NUM_MONTHS+1}" style="background:#fff1f2;color:#9f1239;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;padding:6px 12px;">🔴 Expenses — ${expLabel}</td></tr>`;
+
+  // Salary row
+  h += `<tr><td class="row-label indent">👤 Salary</td>`;
+  ALL_MONTHS.forEach(m => {
+    const v = getMonthExpenses(m.year, m.month + 1).salary;
+    const isCur = m.key===curKey; const isPast = m.key<curKey;
+    const bleft = m.month===0 ? `border-left:3px solid ${YEAR_COLORS[m.year]};` : '';
+    h += `<td class="${isCur?'cur-month-cell':''} ${isPast?'past-col':''}" style="color:#b91c1c;${bleft}">${fmtR(v)}</td>`;
+  });
+  h += '</tr>';
+
+  // OpEx row
+  h += `<tr><td class="row-label indent">🏢 Operating Expenses</td>`;
+  ALL_MONTHS.forEach(m => {
+    const v = escalate(S.opexBase, m.year);
+    const isCur = m.key===curKey; const isPast = m.key<curKey;
+    const bleft = m.month===0 ? `border-left:3px solid ${YEAR_COLORS[m.year]};` : '';
+    h += `<td class="${isCur?'cur-month-cell':''} ${isPast?'past-col':''}" style="color:#b91c1c;${bleft}">${fmtR(v)}</td>`;
+  });
+  h += '</tr>';
+
+  // FA row
+  h += `<tr><td class="row-label indent">🎓 Freelance Academy</td>`;
+  ALL_MONTHS.forEach(m => {
+    const v = escalate(S.faBase, m.year);
+    const isCur = m.key===curKey; const isPast = m.key<curKey;
+    const bleft = m.month===0 ? `border-left:3px solid ${YEAR_COLORS[m.year]};` : '';
+    h += `<td class="${isCur?'cur-month-cell':''} ${isPast?'past-col':''}" style="color:#b91c1c;${bleft}">${fmtR(v)}</td>`;
+  });
+  h += '</tr>';
+
+  // Explorer Gig Payments row — only active within its date window
+  if ((S.explorerGigBase||0) > 0) {
+    h += `<tr><td class="row-label indent">🧭 Explorer Gig Payments</td>`;
+    ALL_MONTHS.forEach(m => {
+      const v = explorerGigActiveFor(m.key) ? escalate(S.explorerGigBase||0, m.year) : 0;
+      const isCur = m.key===curKey; const isPast = m.key<curKey;
+      const bleft = m.month===0 ? `border-left:3px solid ${YEAR_COLORS[m.year]};` : '';
+      h += `<td class="${isCur?'cur-month-cell':''} ${isPast?'past-col':''}" style="color:#b91c1c;${bleft}">${v > 0 ? fmtR(v) : '—'}</td>`;
+    });
+    h += '</tr>';
+  }
+
+  // TCX IC Payments row — only active within its date window, no escalation
+  if ((S.tcxicBase||0) > 0) {
+    h += `<tr><td class="row-label indent">🔗 TCX IC Payments</td>`;
+    ALL_MONTHS.forEach(m => {
+      const v = tcxicActiveFor(m.key) ? (S.tcxicBase||0) : 0;
+      const isCur = m.key===curKey; const isPast = m.key<curKey;
+      const bleft = m.month===0 ? `border-left:3px solid ${YEAR_COLORS[m.year]};` : '';
+      h += `<td class="${isCur?'cur-month-cell':''} ${isPast?'past-col':''}" style="color:#b91c1c;${bleft}">${v > 0 ? fmtR(v) : '—'}</td>`;
+    });
+    h += '</tr>';
+  }
+
+  // Total expenses
+  h += `<tr class="grand-total-row"><td class="row-label" style="background:#fecdd3;font-size:13px;">▶▶ TOTAL EXPENSES</td>`;
+  forecast.forEach(m => {
+    const v = m.exp.total; const isCur = m.key===curKey; const isPast = m.key<curKey;
+    h += `<td class="${isCur?'cur-month-cell':''} ${isPast?'past-col':''}" style="color:#b91c1c;font-weight:700;${isCur?'':'background:#fecdd3;'}">${fmtR(v)}</td>`;
+  });
+  h += '</tr>';
+
+  // ── NET ──
+  h += `<tr><td class="row-label" style="background:#0f172a;color:white;font-weight:700;font-size:13px;border-top:3px solid #0f172a;">NET (Income − Expenses)</td>`;
+  forecast.forEach(m => {
+    const v = m.net; const isCur = m.key===curKey; const isPast = m.key<curKey;
+    const cls = v>0?'positive':v<0?'negative':'zero-val';
+    h += `<td class="${cls} ${isCur?'cur-month-cell':''} ${isPast?'past-col':''}" style="font-weight:700;font-size:13px;">${v!==0?fmtR(v):'—'}</td>`;
+  });
+  h += '</tr>';
+
+  // ── CUMULATIVE BALANCE ──
+  h += `<tr class="cumulative-row"><td class="row-label" style="background:#f3e8ff;font-weight:700;font-size:13px;color:#6b21a8;">CUMULATIVE BALANCE</td>`;
+  let cum = S.startBalance || 0;
+  forecast.forEach(m => {
+    cum += m.net;
+    const isCur = m.key===curKey; const isPast = m.key<curKey;
+    const cls = cum>0?'positive':cum<0?'negative':'zero-val';
+    h += `<td class="${cls} ${isCur?'cur-month-cell':''} ${isPast?'past-col':''}" style="font-weight:700;">${fmtR(cum)}</td>`;
+  });
+  h += '</tr>';
+
+  h += '</tbody>';
+  document.getElementById('ftable').innerHTML = h;
+}
+
+// ═══════════════════════════════════════════════
+// RUNWAY CALCULATOR — TWO VIEWS
+// ═══════════════════════════════════════════════
+function runwayMonthLoop(startCash) {
+  const now = new Date();
+  let year = now.getFullYear(), month = now.getMonth();
+  let balance = startCash;
+  const rows = [];
+  let runMonths = 0, runOutDate = null;
+  for (let i = 0; i < 60; i++) {
+    const key  = `${year}-${String(month+1).padStart(2,'0')}`;
+    const burn = getMonthExpenses(year, month + 1).total;
+    balance -= burn;
+    runMonths++;
+    rows.push({ label:`${MONTH_LABELS[month]} ${year}`, year, key, balance, burn });
+    if (balance <= 0 && !runOutDate) { runOutDate = `${MONTH_LABELS[month]} ${year}`; break; }
+    month++; if (month>=12){month=0;year++;}
+  }
+  return { rows, runMonths: balance>0?'60+':runMonths-1, runOutDate };
+}
+
+function renderRunway() {
+  const bank   = S.bankBalance || 0;
+  const list   = S.receivables || [];
+  const earned = list.reduce((s,r)=>s+(r.earned||0),0);
+  const full   = list.reduce((s,r)=>s+(r.full||0),0);
+
+  // Add active pipeline funders to View 2
+  const activeFcst   = getActiveForecastedFunders();
+  const pipelineTotal = activeFcst.reduce((s,f)=>s+f.amount, 0);
+
+  const v1Cash = bank + earned;
+  const v2Cash = bank + full + pipelineTotal;
+
+  const v1 = runwayMonthLoop(v1Cash);
+  const v2 = runwayMonthLoop(v2Cash);
+  const cur = nowKey();
+
+  // ── View 1 cards
+  document.getElementById('v1-bank').textContent  = fmtBig(bank);
+  document.getElementById('v1-recv').textContent  = fmtBig(earned);
+  document.getElementById('v1-total').textContent = fmtBig(v1Cash);
+  document.getElementById('v1-months').textContent = typeof v1.runMonths==='number' ? v1.runMonths+' months' : v1.runMonths;
+  document.getElementById('v1-runout').textContent = v1.runOutDate ? `Runs out: ${v1.runOutDate}` : 'Beyond 5 years';
+  const v1pct = typeof v1.runMonths==='number' ? Math.min(100,(v1.runMonths/24)*100) : 100;
+  const v1col = v1pct>50?'#10b981':v1pct>25?'#f59e0b':'#ef4444';
+  document.getElementById('v1-bar').style.cssText = `height:100%;border-radius:8px;background:${v1col};width:${v1pct}%;transition:width .5s;`;
+
+  // ── View 2 cards
+  document.getElementById('v2-bank').textContent  = fmtBig(bank);
+  document.getElementById('v2-recv').textContent  = fmtBig(full);
+  document.getElementById('v2-total').textContent = fmtBig(v2Cash);
+  document.getElementById('v2-months').textContent = typeof v2.runMonths==='number' ? v2.runMonths+' months' : v2.runMonths;
+  document.getElementById('v2-runout').textContent = v2.runOutDate ? `Runs out: ${v2.runOutDate}` : 'Beyond 5 years';
+  const v2pct = typeof v2.runMonths==='number' ? Math.min(100,(v2.runMonths/24)*100) : 100;
+  const v2col = v2pct>50?'#10b981':v2pct>25?'#f59e0b':'#ef4444';
+  document.getElementById('v2-bar').style.cssText = `height:100%;border-radius:8px;background:${v2col};width:${v2pct}%;transition:width .5s;`;
+
+  // ── 12-month goal banner
+  const goal = 12;
+  const v1mo = typeof v1.runMonths==='number'?v1.runMonths:99;
+  const v2mo = typeof v2.runMonths==='number'?v2.runMonths:99;
+  const banner = document.getElementById('goal-banner');
+  const gtxt   = document.getElementById('goal-text');
+  if (v1mo >= goal) {
+    banner.style.background='#dcfce7'; banner.style.border='1px solid #86efac';
+    gtxt.style.color='#166534';
+    gtxt.innerHTML=`Both views exceed the 12-month runway goal ✓ — Floor: <strong>${v1mo} months</strong> · Ceiling: <strong>${v2mo} months</strong>`;
+  } else if (v2mo >= goal) {
+    banner.style.background='#fef9c3'; banner.style.border='1px solid #fde68a';
+    gtxt.style.color='#92400e';
+    gtxt.innerHTML=`View 2 meets the 12-month goal but View 1 (earned only) is at <strong>${v1mo} months</strong> — ${goal-v1mo} month${goal-v1mo!==1?'s':''} short of target. New income needed to close the gap.`;
+  } else {
+    banner.style.background='#fee2e2'; banner.style.border='1px solid #fca5a5';
+    gtxt.style.color='#b91c1c';
+    gtxt.innerHTML=`Below 12-month goal on both views — Floor: <strong>${v1mo} months</strong> · Ceiling: <strong>${v2mo} months</strong>. <strong>${goal-v1mo} months</strong> short on the earned view.`;
+  }
+
+  // ── Bank input
+  document.getElementById('rw-bank-input').value = bank || '';
+
+  // ── Burn table (shows pre/post Jun 2026 split when new roles toggled)
+  const years = [2026,2027,2028,2029];
+  const newRolesOn = (S.useNewRoles || S.ceoSalaryProposed);
+  let burnRows = '';
+  years.forEach(y => {
+    const c = y===2026?'#3b82f6':y===2027?'#10b981':y===2028?'#f59e0b':'#8b5cf6';
+    const badge = `<span style="background:${c}20;color:${c};padding:1px 5px;border-radius:3px;font-weight:700;font-size:11px;">${y}</span>`;
+    if (y === 2026 && newRolesOn) {
+      const moPre  = getMonthExpenses(2026, 1).total;
+      const moPost = getMonthExpenses(2026, 6).total;
+      burnRows += `<tr><td>${badge} <span style="font-size:10px;color:#94a3b8;">Jan–May</span></td><td style="color:#b91c1c;font-weight:600;">${fmtBig(moPre)}</td></tr>`;
+      burnRows += `<tr><td>${badge} <span style="font-size:10px;color:#94a3b8;">Jun–Dec</span></td><td style="color:#b91c1c;font-weight:600;">${fmtBig(moPost)}</td></tr>`;
+    } else {
+      const mo = getMonthExpenses(y, 1).total;
+      burnRows += `<tr><td>${badge}</td><td style="color:#b91c1c;font-weight:600;">${fmtBig(mo)}</td></tr>`;
+    }
+  });
+  document.getElementById('burn-table').innerHTML = `<table class="data-table" style="font-size:12px;">
+    <thead><tr><th>Period</th><th>Monthly Burn</th></tr></thead>
+    <tbody>${burnRows}</tbody></table>`;
+
+  // ── Receivables table
+  const rvEl = document.getElementById('receivables-list');
+  if (!list.length) { rvEl.innerHTML='<div class="empty-state">No receivables added yet</div>'; }
+  else {
+    const totE = list.reduce((s,r)=>s+(r.earned||0),0);
+    const totF = list.reduce((s,r)=>s+(r.full||0),0);
+    rvEl.innerHTML=`<table class="data-table" style="font-size:12px;">
+      <thead><tr><th>Funder</th><th style="color:#b91c1c;">Earned (View 1)</th><th style="color:#2563eb;">Full Outstanding (View 2)</th><th></th></tr></thead>
+      <tbody>
+        ${list.map(r=>`<tr>
+          <td>${r.funder}</td>
+          <td style="color:#b91c1c;font-weight:600;">${r.earned>0?'R '+r.earned.toLocaleString('en-ZA',{maximumFractionDigits:2}):'—'}</td>
+          <td style="color:#2563eb;font-weight:600;">R ${(r.full||0).toLocaleString('en-ZA',{maximumFractionDigits:2})}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="removeReceivable('${r.id}')">✕</button></td>
+        </tr>`).join('')}
+        ${pipelineTotal > 0 ? `<tr style="background:#eff6ff;">
+          <td style="color:#1e40af;font-style:italic;">📥 Pipeline (${S.fundingScenario==='e2e-only'?'SAP E2E':'SAP E2E + TCX'}) — auto from toggle</td>
+          <td style="color:#94a3b8;">—</td>
+          <td style="color:#1e40af;font-weight:600;">R ${pipelineTotal.toLocaleString('en-ZA',{maximumFractionDigits:2})}</td>
+          <td></td>
+        </tr>` : ''}
+        <tr style="background:#f8fafc;font-weight:700;border-top:2px solid #e2e8f0;">
+          <td>TOTALS</td>
+          <td style="color:#b91c1c;">R ${totE.toLocaleString('en-ZA',{maximumFractionDigits:2})}</td>
+          <td style="color:#2563eb;">R ${(totF + pipelineTotal).toLocaleString('en-ZA',{maximumFractionDigits:2})}</td>
+          <td></td>
+        </tr>
+      </tbody></table>`;
+  }
+
+  // ── Month-by-month tables
+  function buildMonthTable(rows, tableId, positiveColor) {
+    const tbl = document.getElementById(tableId);
+    let h=`<thead><tr><th>Month</th><th>Burn</th><th>Balance</th></tr></thead><tbody>`;
+    rows.forEach(r=>{
+      const isCur=r.key===cur;
+      const col=r.balance>0?positiveColor:'#b91c1c';
+      h+=`<tr style="${isCur?'background:#fef9c3;font-weight:700;':r.balance<=0?'background:#fee2e2;':''}">
+        <td>${r.label}${isCur?' ◀':''}</td>
+        <td style="color:#b91c1c;font-size:11px;">-${fmtBig(r.burn)}</td>
+        <td style="color:${col};font-weight:600;">${fmtBig(r.balance)}</td>
+      </tr>`;
+    });
+    h+='</tbody>'; tbl.innerHTML=h;
+  }
+  buildMonthTable(v1.rows,'v1-month-table','#15803d');
+  buildMonthTable(v2.rows,'v2-month-table','#15803d');
+
+  // ── Forward 12-month cash flow
+  renderForwardRunway();
+}
+
+// ═══════════════════════════════════════════════
+// FORWARD 12-MONTH CASH FLOW
+// ═══════════════════════════════════════════════
+function buildForwardRunway() {
+  const now = new Date();
+  let y = now.getFullYear(), m = now.getMonth(); // m is 0-based
+  const bank = S.bankBalance || 0;
+
+  // Only add receivables where earned >= full (project fully delivered, full amount owed as lump sum).
+  // Partially-earned items are still being recognised via monthly funder flows — adding them here
+  // would double-count.
+  const lumpItems = (S.receivables || []).filter(r => (r.full||0) > 0 && (r.earned||0) >= (r.full||0));
+  const lumpSum   = lumpItems.reduce((s,r) => s + (r.full||0), 0);
+  const startCash = bank + lumpSum;
+
+  // Reconciliation: sum all future secured-funder monthly recognition from today onwards.
+  // At the end of all project periods this should approximately equal total full outstanding.
+  const todayKey = nowKey();
+  const futureRecognition = ALL_MONTHS
+    .filter(mo => mo.key >= todayKey)
+    .reduce((sum, mo) =>
+      sum + S.funders.filter(f => f.type === 'secured')
+                     .reduce((s,f) => s + funderMonthlyFor(f, mo.key), 0), 0);
+  const totalFullOutstanding = (S.receivables || []).reduce((s,r) => s + (r.full||0), 0);
+
+  const secFunders  = S.funders.filter(f => f.type === 'secured');
+  const fcstFunders = getActiveForecastedFunders();
+
+  const months = [];
+  let balSec  = startCash;
+  let balPipe = startCash;
+
+  for (let i = 0; i < 12; i++) {
+    const key   = `${y}-${String(m+1).padStart(2,'0')}`;
+    const label = `${MONTH_LABELS[m]} ${y}`;
+    const secIncome  = secFunders.reduce((s,f)  => s + funderMonthlyFor(f, key), 0);
+    const pipeIncome = fcstFunders.reduce((s,f) => s + funderMonthlyFor(f, key), 0);
+    const burn       = getMonthExpenses(y, m + 1).total;
+    balSec  += secIncome - burn;
+    balPipe += secIncome + pipeIncome - burn;
+    months.push({ key, label, y, m, secIncome, pipeIncome, burn, balSec, balPipe });
+    m++; if (m >= 12) { m = 0; y++; }
+  }
+
+  const minSec  = Math.min(...months.map(r => r.balSec));
+  const minPipe = Math.min(...months.map(r => r.balPipe));
+  const totSec  = months.reduce((s,r) => s + r.secIncome, 0);
+  const totPipe = months.reduce((s,r) => s + r.pipeIncome, 0);
+  const totBurn = months.reduce((s,r) => s + r.burn, 0);
+
+  return { months, startCash, bank, lumpSum, lumpItems, totSec, totPipe, totBurn,
+           minSec, minPipe, futureRecognition, totalFullOutstanding };
+}
+
+function buildScenarioSummary(title, totalIn, totalBurn, startCash, minBal, endBal, accentColor) {
+  const gap      = minBal < 0 ? Math.abs(minBal) : 0;
+  const gapColor = gap > 0 ? '#b91c1c' : '#15803d';
+  return `
+  <div class="card" style="margin-bottom:0;border-top:4px solid ${accentColor};">
+    <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">${title}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div>
+        <div style="font-size:11px;color:#64748b;">Incoming (12 mo)</div>
+        <div style="font-size:16px;font-weight:700;color:${accentColor};">${fmtFull(totalIn)}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#64748b;">Burn (12 mo)</div>
+        <div style="font-size:16px;font-weight:700;color:#b91c1c;">−${fmtFull(totalBurn)}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#64748b;">Lowest point</div>
+        <div style="font-size:16px;font-weight:700;color:${minBal<0?'#b91c1c':'#15803d'};">${minBal<0?'−':''}${fmtFull(Math.abs(minBal))}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#64748b;">End of month 12</div>
+        <div style="font-size:16px;font-weight:700;color:${endBal<0?'#b91c1c':accentColor};">${endBal<0?'−':''}${fmtFull(Math.abs(endBal))}</div>
+      </div>
+    </div>
+    <div style="padding:10px 14px;border-radius:8px;background:${gap>0?'#fee2e2':'#f0fdf4'};border:1px solid ${gap>0?'#fca5a5':'#bbf7d0'};">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${gapColor};">${gap>0?'⚠ Gap — additional cash needed':'✓ Covered for all 12 months'}</div>
+      <div style="font-size:22px;font-weight:900;color:${gapColor};margin-top:2px;">${gap>0?fmtFull(gap):'No gap'}</div>
+      <div style="font-size:11px;color:#64748b;margin-top:2px;">${gap>0?'Minimum injection needed to avoid going negative in this window':'Cash stays positive throughout the next 12 months'}</div>
+    </div>
+  </div>`;
+}
+
+function renderForwardRunway() {
+  const d      = buildForwardRunway();
+  const endSec  = d.months[d.months.length-1].balSec;
+  const endPipe = d.months[d.months.length-1].balPipe;
+  const curKey  = nowKey();
+  const scenLabel = S.fundingScenario==='neither' ? 'No Pipeline' :
+                    S.fundingScenario==='e2e-only' ? 'E2E Only' : 'Both Land';
+  const maxBal = Math.max(d.startCash, ...d.months.map(r => r.balSec), ...d.months.map(r => r.balPipe), 1);
+
+  const neitherLands = S.fundingScenario === 'neither';
+
+  const html = `
+  <div style="margin-top:28px;padding-top:28px;border-top:2px solid #e2e8f0;">
+    <div style="margin-bottom:16px;">
+      <div style="font-size:17px;font-weight:800;color:#1e293b;">📈 Next 12 Months: Cash Flow Forecast</div>
+      <div style="font-size:13px;color:#64748b;margin-top:3px;">Unlike the runway views above, this one counts real incoming funding month-by-month. Starting position (bank + earned) plus secured grants flowing in, minus monthly burn.</div>
+    </div>
+
+    <!-- Starting position -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+      <div class="card" style="margin-bottom:0;border-left:4px solid #334155;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:4px;">Bank balance today</div>
+        <div style="font-size:20px;font-weight:800;color:#334155;">${fmtFull(d.bank)}</div>
+      </div>
+      <div class="card" style="margin-bottom:0;border-left:4px solid #2563eb;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:4px;">Fully owed receivables added</div>
+        <div style="font-size:20px;font-weight:800;color:#2563eb;">${d.lumpSum > 0 ? fmtFull(d.lumpSum) : '—'}</div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px;">
+          ${d.lumpItems.length > 0
+            ? d.lumpItems.map(r => `${r.funder}: ${fmtFull(r.full)}`).join(' · ')
+            : 'None — partially-earned items flow in via monthly recognition'}
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:0;border-left:4px solid #0f172a;background:#0f172a;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.6);margin-bottom:4px;">Total starting position</div>
+        <div style="font-size:22px;font-weight:900;color:white;">${fmtFull(d.startCash)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;">Bank${d.lumpSum > 0 ? ' + fully owed receivables' : ' only'}</div>
+      </div>
+    </div>
+
+    <!-- Two scenario summaries -->
+    <div style="display:grid;grid-template-columns:${neitherLands ? '1fr' : '1fr 1fr'};gap:16px;margin-bottom:20px;">
+      ${buildScenarioSummary('Scenario A — Secured income only', d.totSec, d.totBurn, d.startCash, d.minSec, endSec, '#10b981')}
+      ${neitherLands
+        ? `<div class="card" style="margin-bottom:0;border-top:4px solid #94a3b8;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;padding:28px;text-align:center;">
+            <div style="font-size:24px;">🔒</div>
+            <div style="font-size:13px;font-weight:700;color:#64748b;">Pipeline not included</div>
+            <div style="font-size:12px;color:#94a3b8;">Toggle to <strong>E2E Only</strong> or <strong>Both Land</strong> above to see what pipeline funding adds to the next 12 months.</div>
+           </div>`
+        : buildScenarioSummary('Scenario B — Secured + Pipeline (' + scenLabel + ')', d.totSec + d.totPipe, d.totBurn, d.startCash, d.minPipe, endPipe, '#8b5cf6')
+      }
+    </div>
+
+    <!-- Month-by-month table -->
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-title" style="margin-bottom:12px;">Month-by-Month Detail · Starting Position ${fmtFull(d.startCash)}</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Column A = secured income only · Column B = secured + pipeline · Balance tracks from your starting position each month</div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" style="font-size:12px;min-width:760px;">
+          <thead>
+            <tr style="background:#f8fafc;">
+              <th style="text-align:left;min-width:100px;">Month</th>
+              <th style="text-align:right;color:#059669;">Secured In</th>
+              <th style="text-align:right;color:#7c3aed;">Pipeline In</th>
+              <th style="text-align:right;color:#b91c1c;">Burn</th>
+              <th style="text-align:right;color:#059669;border-left:2px solid #e2e8f0;padding-left:14px;">Balance (A)</th>
+              <th style="text-align:right;color:#7c3aed;border-left:1px solid #e2e8f0;">Balance (B)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:#0f172a;">
+              <td style="color:rgba(255,255,255,.7);font-style:italic;text-align:left;">Starting position</td>
+              <td></td><td></td><td></td>
+              <td style="text-align:right;color:white;font-weight:700;border-left:2px solid #475569;padding-left:14px;">${fmtFull(d.startCash)}</td>
+              <td style="text-align:right;color:white;font-weight:700;border-left:1px solid #475569;">${fmtFull(d.startCash)}</td>
+            </tr>
+            ${d.months.map((r, i) => {
+              const isCur = r.key === curKey;
+              const colA  = r.balSec  >= 0 ? '#059669' : '#b91c1c';
+              const colB  = r.balPipe >= 0 ? '#7c3aed' : '#b91c1c';
+              const rowBg = isCur ? 'background:#fef9c3;' : (r.balSec < 0 ? 'background:#fff0f0;' : (i%2===0 ? '' : 'background:#f8fafc;'));
+              const barA  = Math.max(0, (r.balSec  / maxBal) * 80);
+              const barB  = Math.max(0, (r.balPipe / maxBal) * 80);
+              return `<tr style="${rowBg}${isCur?'font-weight:700;':''}">
+                <td style="text-align:left;"><strong>${r.label}</strong>${isCur?' ◀':''}</td>
+                <td style="text-align:right;color:#059669;">${r.secIncome  > 0 ? fmtBig(r.secIncome)  : '—'}</td>
+                <td style="text-align:right;color:#7c3aed;">${r.pipeIncome > 0 ? fmtBig(r.pipeIncome) : '—'}</td>
+                <td style="text-align:right;color:#b91c1c;">−${fmtBig(r.burn)}</td>
+                <td style="border-left:2px solid #e2e8f0;padding-left:14px;">
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+                    <div style="width:${barA.toFixed(0)}px;height:6px;border-radius:3px;background:${r.balSec>=0?'#10b981':'#ef4444'};flex-shrink:0;"></div>
+                    <span style="color:${colA};font-weight:700;">${r.balSec<0?'−':''}${fmtBig(Math.abs(r.balSec))}</span>
+                  </div>
+                </td>
+                <td style="border-left:1px solid #e2e8f0;">
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+                    <div style="width:${barB.toFixed(0)}px;height:6px;border-radius:3px;background:${r.balPipe>=0?'#8b5cf6':'#ef4444'};flex-shrink:0;"></div>
+                    <span style="color:${colB};font-weight:700;">${r.balPipe<0?'−':''}${fmtBig(Math.abs(r.balPipe))}</span>
+                  </div>
+                </td>
+              </tr>`;
+            }).join('')}
+            <tr style="background:#1e293b;font-weight:700;">
+              <td style="color:rgba(255,255,255,.7);text-align:left;">End of 12 months</td>
+              <td style="text-align:right;color:#34d399;">${fmtBig(d.totSec)}</td>
+              <td style="text-align:right;color:#c4b5fd;">${d.totPipe > 0 ? fmtBig(d.totPipe) : '—'}</td>
+              <td style="text-align:right;color:#fca5a5;">−${fmtBig(d.totBurn)}</td>
+              <td style="text-align:right;color:${endSec>=0?'#34d399':'#fca5a5'};font-size:14px;border-left:2px solid #475569;padding-left:14px;">${endSec<0?'−':''}${fmtBig(Math.abs(endSec))}</td>
+              <td style="text-align:right;color:${endPipe>=0?'#c4b5fd':'#fca5a5'};font-size:14px;border-left:1px solid #475569;">${endPipe<0?'−':''}${fmtBig(Math.abs(endPipe))}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('forward-runway-section').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════
+// ANNUAL VIEW
+// ═══════════════════════════════════════════════
+function funderAnnualFor(funder, year) {
+  let total = 0;
+  for (let m = 1; m <= 12; m++) {
+    const key = `${year}-${String(m).padStart(2,'0')}`;
+    total += funderMonthlyFor(funder, key);
+  }
+  return total;
+}
+
+const annualSectionState = { secured: true, forecasted: true, expenses: true };
+
+function toggleMonthBreakdown(btn) {
+  const panel = document.getElementById('month-breakdown-panel');
+  const open  = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  btn.querySelector('span:last-child').textContent = open ? '▼' : '▲';
+  btn.querySelector('span:first-child').textContent = open
+    ? '📅 See month-by-month breakdown'
+    : '📅 Hide month-by-month breakdown';
+}
+
+function toggleAnnualSection(name) {
+  annualSectionState[name] = !annualSectionState[name];
+  renderAnnualView();
+}
+
+function renderAnnualView() {
+  const yearEl = document.getElementById('annual-year-select');
+  const year   = yearEl ? parseInt(yearEl.value) : 2026;
+  const yColor = YEAR_COLORS[year] || '#3b82f6';
+
+  const secFunders  = S.funders.filter(f => f.type === 'secured');
+  const fcstFunders = getActiveForecastedFunders();
+  // Sum expenses month-by-month so Jun 2026 new-roles start date is respected
+  const yExp        = getYearlyExpenses(year);
+  // Representative monthly rate: use Jun 2026 (post new-roles) for 2026, Jan for other years
+  const expDisplay  = getMonthExpenses(year, year === 2026 ? 6 : 1);
+  const escPct      = Math.round((Math.pow(1.10, year - START_YEAR) - 1) * 100);
+
+  const secTotal    = secFunders.reduce((s,f)  => s + funderAnnualFor(f, year), 0);
+  const fcstTotal   = fcstFunders.reduce((s,f) => s + funderAnnualFor(f, year), 0);
+  const totalIncome = secTotal + fcstTotal;
+  const expYearly   = yExp.total;
+  const net         = totalIncome - expYearly;
+  const netColor    = net >= 0 ? '#15803d' : '#b91c1c';
+
+  // ── Summary cards ──
+  const summaryEl = document.getElementById('annual-summary-cards');
+  summaryEl.innerHTML = `
+    <div class="card" style="margin-bottom:0;border-top:4px solid ${yColor};">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:8px;">Total Income · ${year}</div>
+      <div style="font-size:28px;font-weight:900;color:#15803d;">${fmtFull(totalIncome)}</div>
+      <div style="font-size:12px;color:#64748b;margin-top:6px;">Secured: ${fmtFull(secTotal)}</div>
+      <div style="font-size:12px;color:#2563eb;">Pipeline: ${fcstTotal > 0 ? fmtFull(fcstTotal) : '—'}</div>
+    </div>
+    <div class="card" style="margin-bottom:0;border-top:4px solid #ef4444;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:8px;">Total Expenses · ${year}</div>
+      <div style="font-size:28px;font-weight:900;color:#b91c1c;">${fmtFull(expYearly)}</div>
+      <div style="font-size:12px;color:#64748b;margin-top:6px;">${fmtFull(expDisplay.total)}/month</div>
+      <div style="font-size:12px;color:#94a3b8;">${escPct > 0 ? `+${escPct}% above 2026 base` : '2026 base rates'}</div>
+    </div>
+    <div class="card" style="margin-bottom:0;border-top:4px solid ${netColor};">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:8px;">Net Result · ${year}</div>
+      <div style="font-size:28px;font-weight:900;color:${netColor};">${net < 0 ? '−' : ''}${fmtFull(Math.abs(net))}</div>
+      <div style="font-size:12px;color:#64748b;margin-top:6px;">Avg ${net < 0 ? '−' : ''}${fmtFull(Math.abs(net/12))}/month</div>
+      <div style="font-size:12px;color:${netColor};font-weight:600;">${net >= 0 ? '✓ Surplus' : '⚠ Deficit'}</div>
+    </div>
+  `;
+
+  // ── Collapsible sections ──
+  const sectEl = document.getElementById('annual-sections');
+  let html = '';
+
+  // ── SECURED FUNDERS ──
+  const secOpen = annualSectionState.secured;
+  const activeSec   = secFunders.filter(f => funderAnnualFor(f, year) > 0);
+  const inactiveSec = secFunders.filter(f => funderAnnualFor(f, year) === 0);
+  html += `
+  <div class="annual-section">
+    <div class="annual-section-header" onclick="toggleAnnualSection('secured')" style="background:${secOpen?'#f0fdf4':'#fff'};">
+      <span style="font-size:20px;">💚</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#166534;">Secured Funding</div>
+        <div style="font-size:12px;color:#4ade80;">${activeSec.length} of ${secFunders.length} funders active in ${year} · ${fmtFull(secTotal)}</div>
+      </div>
+      <span class="annual-section-toggle">${secOpen ? '▲ Collapse' : '▼ Expand'}</span>
+    </div>`;
+  if (secOpen) {
+    html += `<div class="annual-section-body">`;
+    if (!activeSec.length) {
+      html += `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">No secured funders active in ${year}</div>`;
+    } else {
+      activeSec.forEach(f => {
+        const annual  = funderAnnualFor(f, year);
+        const monthly = f.amount / f.duration;
+        html += `<div class="annual-funder-row">
+          <div class="annual-funder-name"><strong>${f.name}</strong></div>
+          <div class="annual-funder-monthly">${fmtFull(monthly)}/mo</div>
+          <div class="annual-funder-total" style="color:#15803d;">${fmtFull(annual)}</div>
+        </div>`;
+      });
+    }
+    if (inactiveSec.length) {
+      html += `<div style="font-size:11px;color:#94a3b8;padding:10px 0 4px;border-top:1px dashed #e2e8f0;margin-top:6px;">Not active in ${year}: ${inactiveSec.map(f=>f.name).join(' · ')}</div>`;
+    }
+    html += `<div class="annual-total-row">
+      <div style="font-size:14px;font-weight:700;color:#166534;flex:1;">Total Secured Income ${year}</div>
+      <div style="font-size:20px;font-weight:900;color:#15803d;">${fmtFull(secTotal)}</div>
+    </div></div>`;
+  }
+  html += `</div>`;
+
+  // ── PIPELINE/FORECASTED FUNDERS ──
+  const fcstOpen = annualSectionState.forecasted;
+  const fnScenLabel = S.fundingScenario === 'neither' ? 'Neither Lands (excluded)' :
+                      S.fundingScenario === 'e2e-only' ? 'E2E Only' : 'Both Land';
+  const activeFcst   = fcstFunders.filter(f => funderAnnualFor(f, year) > 0);
+  html += `
+  <div class="annual-section">
+    <div class="annual-section-header" onclick="toggleAnnualSection('forecasted')" style="background:${fcstOpen?'#eff6ff':'#fff'};">
+      <span style="font-size:20px;">💙</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#1e40af;">Pipeline Funding <span style="font-size:12px;font-weight:400;background:#dbeafe;padding:2px 8px;border-radius:99px;margin-left:4px;">${fnScenLabel}</span></div>
+        <div style="font-size:12px;color:#60a5fa;">${activeFcst.length} funders active in ${year} · ${fcstTotal > 0 ? fmtFull(fcstTotal) : '—'}</div>
+      </div>
+      <span class="annual-section-toggle">${fcstOpen ? '▲ Collapse' : '▼ Expand'}</span>
+    </div>`;
+  if (fcstOpen) {
+    html += `<div class="annual-section-body">`;
+    if (!fcstFunders.length) {
+      html += `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">Pipeline set to <strong>${fnScenLabel}</strong> — no funders included.<br>Use the Pipeline toggle above to include forecasted funding.</div>`;
+    } else {
+      fcstFunders.forEach(f => {
+        const annual  = funderAnnualFor(f, year);
+        const monthly = f.amount / f.duration;
+        html += `<div class="annual-funder-row">
+          <div class="annual-funder-name"><strong>${f.name}</strong></div>
+          <div class="annual-funder-monthly">${fmtFull(monthly)}/mo</div>
+          <div class="annual-funder-total" style="color:${annual>0?'#2563eb':'#94a3b8'};">${annual > 0 ? fmtFull(annual) : '— (not in ' + year + ')'}</div>
+        </div>`;
+      });
+    }
+    html += `<div class="annual-total-row">
+      <div style="font-size:14px;font-weight:700;color:#1e40af;flex:1;">Total Pipeline Income ${year}</div>
+      <div style="font-size:20px;font-weight:900;color:#2563eb;">${fcstTotal > 0 ? fmtFull(fcstTotal) : '—'}</div>
+    </div></div>`;
+  }
+  html += `</div>`;
+
+  // ── EXPENSES ──
+  const expOpen = annualSectionState.expenses;
+  const expDesc = [
+    S.useNewRoles ? '+ New Roles' : 'Current Payroll',
+    S.ceoSalaryProposed ? 'CEO R 191,667' : 'CEO R 140,000',
+    escPct > 0 ? `+${escPct}% escalation applied` : '2026 base'
+  ].join(' · ');
+  html += `
+  <div class="annual-section">
+    <div class="annual-section-header" onclick="toggleAnnualSection('expenses')" style="background:${expOpen?'#fff1f2':'#fff'};">
+      <span style="font-size:20px;">🔴</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#9f1239;">Expenses</div>
+        <div style="font-size:12px;color:#f87171;">${expDesc} · ${fmtFull(expYearly)}/yr</div>
+      </div>
+      <span class="annual-section-toggle">${expOpen ? '▲ Collapse' : '▼ Expand'}</span>
+    </div>`;
+  if (expOpen) {
+    const salBase2026 = S.salaryBase || 0;
+    const salNewRoles = S.useNewRoles ? (S.salaryNewRoles || 0) : 0;
+    const salCeoDelta = S.ceoSalaryProposed ? (S.ceoSalaryDelta || 0) : 0;
+    const newRolesNote = (salNewRoles > 0 || salCeoDelta > 0) && year === 2026
+      ? ' · New Roles/CEO from Jun 2026' : '';
+    const expRows = [
+      {
+        label: '👤 Salary',
+        monthly: expDisplay.salary,
+        annual: yExp.salary,
+        note: `Base R ${(salBase2026).toLocaleString('en-ZA')}`
+          + (salNewRoles > 0 ? ` + New Roles R ${(salNewRoles).toLocaleString('en-ZA')}` : '')
+          + (salCeoDelta > 0 ? ` + CEO delta R ${(salCeoDelta).toLocaleString('en-ZA')}` : '')
+          + (escPct > 0 ? ` · +${escPct}% in ${year}` : '')
+          + newRolesNote
+      },
+      {
+        label: '🏢 Operating Expenses',
+        monthly: expDisplay.opex,
+        annual: yExp.opex,
+        note: `Base R ${(S.opexBase||0).toLocaleString('en-ZA')}` + (escPct > 0 ? ` · +${escPct}% in ${year}` : '')
+      },
+      {
+        label: '🎓 Freelance Academy',
+        monthly: expDisplay.fa,
+        annual: yExp.fa,
+        note: `Base R ${(S.faBase||0).toLocaleString('en-ZA')}` + (escPct > 0 ? ` · +${escPct}% in ${year}` : '')
+      },
+      ...((S.explorerGigBase||0) > 0 ? [{
+        label: '🧭 Explorer Gig Payments',
+        monthly: expDisplay.explorer,
+        annual: yExp.explorer,
+        note: (() => {
+          if (!S.explorerGigStartDate || !S.explorerGigDuration) return `Base R ${(S.explorerGigBase||0).toLocaleString('en-ZA')}` + (escPct > 0 ? ` · +${escPct}% in ${year}` : '');
+          const [esy,esm] = S.explorerGigStartDate.split('-').map(Number);
+          const eEnd = new Date(esy, esm - 1 + S.explorerGigDuration - 1);
+          return `Base R ${(S.explorerGigBase||0).toLocaleString('en-ZA')} · ${MONTH_LABELS[esm-1]} ${esy}–${MONTH_LABELS[eEnd.getMonth()]} ${eEnd.getFullYear()}` + (escPct > 0 ? ` · +${escPct}% in ${year}` : '');
+        })()
+      }] : []),
+      ...((S.tcxicBase||0) > 0 ? [{
+        label: '🔗 TCX IC Payments',
+        monthly: expDisplay.tcxic,
+        annual: yExp.tcxic,
+        note: (() => {
+          if (!S.tcxicStartDate || !S.tcxicDuration) return `Fixed R ${(S.tcxicBase||0).toLocaleString('en-ZA')}/mo · no escalation`;
+          const [sy,sm] = S.tcxicStartDate.split('-').map(Number);
+          const endDate = new Date(sy, sm - 1 + S.tcxicDuration - 1);
+          return `Fixed R ${(S.tcxicBase||0).toLocaleString('en-ZA')}/mo · ${MONTH_LABELS[sm-1]} ${sy}–${MONTH_LABELS[endDate.getMonth()]} ${endDate.getFullYear()} only · no annual escalation`;
+        })()
+      }] : []),
+    ];
+    html += `<div class="annual-section-body">`;
+    expRows.forEach(r => {
+      html += `<div class="annual-funder-row">
+        <div class="annual-funder-name">
+          <strong>${r.label}</strong>
+          <span style="font-size:11px;color:#94a3b8;margin-left:10px;">${r.note}</span>
+        </div>
+        <div class="annual-funder-monthly">${fmtFull(r.monthly)}/mo</div>
+        <div class="annual-funder-total" style="color:#b91c1c;">${fmtFull(r.annual)}</div>
+      </div>`;
+    });
+    html += `<div class="annual-total-row">
+      <div style="font-size:14px;font-weight:700;color:#9f1239;flex:1;">Total Expenses ${year}</div>
+      <div style="font-size:20px;font-weight:900;color:#b91c1c;">${fmtFull(expYearly)}</div>
+    </div></div>`;
+  }
+  html += `</div>`;
+
+  // ── Net result banner ──
+  const netBg     = net >= 0 ? '#f0fdf4' : '#fff1f2';
+  const netBorder = net >= 0 ? '#10b981' : '#ef4444';
+  html += `
+  <div style="background:${netBg};border:2px solid ${netBorder};border-radius:12px;padding:22px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+    <div style="font-size:36px;">${net >= 0 ? '✅' : '⚠️'}</div>
+    <div style="flex:1;min-width:200px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${netColor};">${year} Annual Net Result</div>
+      <div style="font-size:34px;font-weight:900;color:${netColor};margin-top:6px;">${net < 0 ? '−' : ''}${fmtFull(Math.abs(net))}</div>
+      <div style="font-size:13px;color:#64748b;margin-top:6px;">Income ${fmtFull(totalIncome)} minus Expenses ${fmtFull(expYearly)}</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:12px;color:#64748b;">Monthly average</div>
+      <div style="font-size:22px;font-weight:800;color:${netColor};margin-top:4px;">${net < 0 ? '−' : ''}${fmtFull(Math.abs(net/12))}/mo</div>
+      <div style="font-size:12px;color:#64748b;margin-top:4px;">Scenario: ${S.useNewRoles?'+New Roles':'Current'} · ${S.fundingScenario==='neither'?'No Pipeline':S.fundingScenario==='e2e-only'?'E2E Only':'Both Land'}</div>
+    </div>
+  </div>`;
+
+  sectEl.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════
+function previewMonthly(p) {
+  const amt = parseFloat(document.getElementById(p+'-amount').value)||0;
+  const dur = parseInt(document.getElementById(p+'-duration').value)||0;
+  const el  = document.getElementById(p+'-preview');
+  el.textContent = (amt>0&&dur>0) ? `→ R ${Math.round(amt/dur).toLocaleString('en-ZA')}/month` : '';
+}
+
+function addFunder(type) {
+  const p    = type==='secured' ? 's' : 'f';
+  const name = document.getElementById(p+'-name').value.trim();
+  const amt  = parseFloat(document.getElementById(p+'-amount').value)||0;
+  const st   = document.getElementById(p+'-start').value;
+  const dur  = parseInt(document.getElementById(p+'-duration').value)||0;
+  if (!name||amt<=0||!st||dur<=0) { alert('Please fill in all fields.'); return; }
+  S.funders.push({ id:uid(), type, name, amount:amt, startDate:st, duration:dur });
+  document.getElementById(p+'-name').value='';
+  document.getElementById(p+'-amount').value='';
+  document.getElementById(p+'-duration').value='';
+  document.getElementById(p+'-preview').textContent='';
+  persist(); render();
+}
+
+function removeFunder(id) {
+  S.funders = S.funders.filter(f=>f.id!==id);
+  persist(); render();
+}
+
+function saveExpenses() {
+  S.salaryBase      = parseFloat(document.getElementById('salary-base').value)||0;
+  S.salaryNewRoles  = parseFloat(document.getElementById('salary-new-roles').value)||0;
+  S.opexBase        = parseFloat(document.getElementById('opex-base').value)||0;
+  S.faBase          = parseFloat(document.getElementById('fa-base').value)||0;
+  S.explorerGigBase       = parseFloat(document.getElementById('explorer-gig-base').value)||0;
+  S.explorerGigStartDate  = document.getElementById('explorer-gig-start').value || '2026-01';
+  S.explorerGigDuration   = parseInt(document.getElementById('explorer-gig-duration').value)||27;
+  const explorerRangeEl = document.getElementById('explorer-gig-range-label');
+  if (explorerRangeEl && S.explorerGigStartDate && S.explorerGigDuration) {
+    const [esy,esm] = S.explorerGigStartDate.split('-').map(Number);
+    const eEnd = new Date(esy, esm - 1 + S.explorerGigDuration - 1);
+    explorerRangeEl.textContent = `${MONTH_LABELS[esm-1]} ${esy} → ${MONTH_LABELS[eEnd.getMonth()]} ${eEnd.getFullYear()}`;
+  }
+  S.tcxicBase        = parseFloat(document.getElementById('tcxic-base').value)||0;
+  S.tcxicStartDate   = document.getElementById('tcxic-start').value || '2026-04';
+  S.tcxicDuration    = parseInt(document.getElementById('tcxic-duration').value)||6;
+  // Update the range label
+  const rangeEl = document.getElementById('tcxic-range-label');
+  if (rangeEl && S.tcxicStartDate && S.tcxicDuration) {
+    const [sy,sm] = S.tcxicStartDate.split('-').map(Number);
+    const endDate = new Date(sy, sm - 1 + S.tcxicDuration - 1);
+    rangeEl.textContent = `${MONTH_LABELS[sm-1]} ${sy} → ${MONTH_LABELS[endDate.getMonth()]} ${endDate.getFullYear()}`;
+  }
+  persist(); render();
+}
+
+function saveBalance() {
+  S.startBalance = parseFloat(document.getElementById('start-balance').value)||0;
+  persist(); render();
+}
+
+function saveRunway() {
+  S.bankBalance = parseFloat(document.getElementById('rw-bank-input').value)||0;
+  persist(); renderRunway();
+}
+
+function addReceivable() {
+  const name   = document.getElementById('rv-name').value.trim();
+  const earned = parseFloat(document.getElementById('rv-earned').value)||0;
+  const full   = parseFloat(document.getElementById('rv-full').value)||0;
+  if (!name||(earned<=0&&full<=0)) { alert('Please enter a funder name and at least one amount.'); return; }
+  if (!S.receivables) S.receivables = [];
+  S.receivables.push({ id:uid(), funder:name, earned, full });
+  document.getElementById('rv-name').value='';
+  document.getElementById('rv-earned').value='';
+  document.getElementById('rv-full').value='';
+  persist(); renderRunway();
+}
+
+function removeReceivable(id) {
+  const item = (S.receivables||[]).find(r=>r.id===id);
+  S.receivables = (S.receivables||[]).filter(r=>r.id!==id);
+  // Pre-fill the add form so user can tweak and re-add
+  if (item) {
+    document.getElementById('rv-name').value   = item.funder || '';
+    document.getElementById('rv-earned').value = item.earned || '';
+    document.getElementById('rv-full').value   = item.full   || '';
+    document.getElementById('rv-name').focus();
+  }
+  persist(); renderRunway();
+}
+
+function setScenario(newRoles) {
+  S.useNewRoles = newRoles;
+  persist(); render();
+}
+
+function setCeoSalary(proposed) {
+  S.ceoSalaryProposed = proposed;
+  persist(); render();
+}
+
+function setFundingScenario(scenario) {
+  S.fundingScenario = scenario;
+  persist(); render();
+}
+
+// ═══════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if (name==='home')    renderHome();
+  if (name==='grid')    renderGrid();
+  if (name==='expenses') renderEscalationPreview();
+  if (name==='runway')  renderRunway();
+  if (name==='annual')  renderAnnualView();
+}
+
+// ═══════════════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════════════
+function render() {
+  renderFunders();
+  updateSummary();
+  if (document.getElementById('tab-home').classList.contains('active'))     renderHome();
+  if (document.getElementById('tab-grid').classList.contains('active'))     renderGrid();
+  if (document.getElementById('tab-expenses').classList.contains('active')) renderEscalationPreview();
+  if (document.getElementById('tab-runway').classList.contains('active'))   renderRunway();
+  if (document.getElementById('tab-annual').classList.contains('active'))   renderAnnualView();
+}
+
+function restoreFormValues() {
+  document.getElementById('salary-base').value       = S.salaryBase || 3000000;
+  document.getElementById('salary-new-roles').value  = S.salaryNewRoles || 679000;
+  document.getElementById('opex-base').value         = S.opexBase || 358000;
+  document.getElementById('fa-base').value           = S.faBase || 281170;
+  document.getElementById('explorer-gig-base').value     = S.explorerGigBase || 0;
+  document.getElementById('explorer-gig-start').value    = S.explorerGigStartDate || '2026-01';
+  document.getElementById('explorer-gig-duration').value = S.explorerGigDuration || 27;
+  document.getElementById('tcxic-base').value            = S.tcxicBase || 0;
+  document.getElementById('tcxic-start').value       = S.tcxicStartDate || '2026-04';
+  document.getElementById('tcxic-duration').value    = S.tcxicDuration || 6;
+  document.getElementById('start-balance').value     = S.startBalance || '';
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+loadState().then(() => {
+  restoreFormValues();
+  render();
+});
+</script>
+</body>
+</html>
